@@ -12,6 +12,7 @@ local ServerModules = ServerStorage.Modules
 -- // MAIN \\ --
 require(ReplicatedStorage.Packets)
 require(ServerScriptService.Components.PlayerHandler).init()
+print("hi")
 
 for _, Module in ServerScriptService.Components:GetChildren() do
 	if not Module:IsA("ModuleScript") then
