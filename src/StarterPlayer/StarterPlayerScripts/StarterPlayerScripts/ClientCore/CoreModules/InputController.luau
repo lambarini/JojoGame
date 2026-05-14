@@ -18,7 +18,7 @@ local Humanoid = Character:WaitForChild("Humanoid") :: Humanoid
 local Whitelist = "QWERTYUIOPASDFGHJKLZXCVBNM"
 
 function HandleInput(Input : InputObject, GameProcessed : boolean)
-	if not GameProcessed then
+	if GameProcessed then
 		return
 	end
 	
