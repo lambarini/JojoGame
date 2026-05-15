@@ -177,6 +177,7 @@ function Ability:Barrage()
 				Size = Vector3.new(4, 4, 8),
 				Offset = Vector3.new(0, 0, -4),
 				TargetPart = self.AbilityManager.Character.HumanoidRootPart,
+				Lingering = true,
 				Character = self.AbilityManager.Character,
 				Callback = function(Enemy : CoreUtils.HumanoidR15)
 					if blacklist[Enemy] then return end

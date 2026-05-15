@@ -17,6 +17,7 @@ local Humanoid = Character:WaitForChild("Humanoid") :: Humanoid
 
 local Whitelist = {
 	Q = true,
+	E = true,
 	R = true,
 	T = true,
 	Y = true,
@@ -46,7 +47,7 @@ function HandleInput(Input : InputObject, GameProcessed : boolean)
 		return
 	end
 	
-	if Whitelist[Input.KeyCode.Name] then
+	if not Whitelist[Input.KeyCode.Name] then
 		return
 	end
 	

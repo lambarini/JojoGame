@@ -10,9 +10,9 @@ local ServerModules = ServerStorage.Modules
 -- // VARIABLES \\ --
 
 -- // MAIN \\ --
+_G.DEBUG_MODE = game:GetService("RunService"):IsStudio()
 require(ReplicatedStorage.Packets)
 require(ServerScriptService.Components.PlayerHandler).init()
-print("hi")
 
 for _, Module in ServerScriptService.Components:GetChildren() do
 	if not Module:IsA("ModuleScript") then

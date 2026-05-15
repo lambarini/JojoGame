@@ -45,15 +45,15 @@ return function(Data : {})
 		if Rand:NextInteger(1, 2) == 1 then
 			local F1 = Rand:NextInteger(1, 2) == 1
 			
-			P0 = CFrame.new(-1.5, F1 and -0.5 or 0.5, 0)
-			P1 = CFrame.new(-2.5, F1 and -1.5 or 1.5, -3)
-			P2 = CFrame.new(-1.5, 0, -6)
+			P0 = CFrame.new(-1.5 + Rand:NextNumber(-1, 1), F1 and -0.5 or 0.5, 0)
+			P1 = CFrame.new(-2.5 + Rand:NextNumber(-1, 1), F1 and -1.5 or 1.5, -3)
+			P2 = CFrame.new(-1.5 + Rand:NextNumber(-1, 1), 0, -6 + Rand:NextNumber(-1, 1))
 		else
 			local F1 = Rand:NextInteger(1, 2) == 1
 
-			P0 = CFrame.new(1.5, F1 and -0.5 or 0.5, 0)
-			P1 = CFrame.new(2.5, F1 and -1.5 or 1.5, -3)
-			P2 = CFrame.new(1.5, 0, -6)
+			P0 = CFrame.new(1.5 + Rand:NextNumber(-1, 1), F1 and -0.5 or 0.5, 0)
+			P1 = CFrame.new(2.5 + Rand:NextNumber(-1, 1), F1 and -1.5 or 1.5, -3)
+			P2 = CFrame.new(1.5 + Rand:NextNumber(-1, 1), 0, -6 + Rand:NextNumber(-1, 1))
 		end
 		
 		local Parts = Arm:GetChildren() :: {BasePart}
@@ -69,11 +69,11 @@ return function(Data : {})
 			
 			local Position = HumanoidRootPart.CFrame
 			local C1 = Bezier((Position * P0).Position, (Position * P1).Position, (Position * P2).Position, T)
-			local C2 = Bezier((Position * P0).Position, (Position * P1).Position, (Position * P2).Position, T + 0.02)
+			local C2 = Bezier((Position * P0).Position, (Position * P1).Position, (Position * P2).Position, T + 0.05)
 			
 			if T > 0.4 then
 				for _, Part in Parts do
-					Part.Transparency = (T - 0.4) / 0.6 
+					Part.Transparency = (T - 0.35) / 0.6 
 				end
 			end
 			
