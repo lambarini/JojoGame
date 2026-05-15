@@ -15,7 +15,27 @@ local Player = PlayersService.LocalPlayer
 local Character = Player.Character or Player.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid") :: Humanoid
 
-local Whitelist = "QWERTYUIOPASDFGHJKLZXCVBNM"
+local Whitelist = {
+	Q = true,
+	R = true,
+	T = true,
+	Y = true,
+	U = true,
+	I = true,
+	O = true,
+	F = true,
+	G = true,
+	H = true,
+	J = true,
+	K = true,
+	L = true,
+	Z = true,
+	X = true,
+	C = true,
+	V = true,
+	B = true,
+	N = true,
+}
 
 function HandleInput(Input : InputObject, GameProcessed : boolean)
 	if GameProcessed then
@@ -26,7 +46,7 @@ function HandleInput(Input : InputObject, GameProcessed : boolean)
 		return
 	end
 	
-	if not string.find(Whitelist, Input.KeyCode.Name) then
+	if Whitelist[Input.KeyCode.Name] then
 		return
 	end
 	
