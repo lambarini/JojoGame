@@ -74,17 +74,15 @@ return function(Data : {})
 			local C1 = Bezier((Position * P0).Position, (Position * P1).Position, (Position * P2).Position, T)
 			local C2 = Bezier((Position * P0).Position, (Position * P1).Position, (Position * P2).Position, T + 0.05)
 			
-			if T > 0.3 then
-				for _, Part in Parts do
-					Part.Transparency = (T - 0.3) / 0.6 
-				end
+			for _, Part in Parts do
+				Part.Transparency = math.sqrt(math.cos(math.pi * T * 2))
 			end
 			
 			Arm.PrimaryPart.CFrame = CFrame.lookAt(C1, C2) * CFrame.Angles(math.rad(-90), 0, 0)
 		end)
 	end
 	
-	while task.wait() and Barrages[Character] do
+	while task.wait(1 / 60) and Barrages[Character] do
 		BarrageEffect.PrimaryPart.CFrame = HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(90), 0)
 		SpawnArm()
 	end
