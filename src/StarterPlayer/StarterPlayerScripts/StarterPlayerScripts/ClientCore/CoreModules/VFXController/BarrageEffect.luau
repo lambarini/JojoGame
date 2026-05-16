@@ -38,7 +38,7 @@ return function(Data : {})
 		local Start = os.clock()
 		
 		local Arm = Trove:Clone(BarrageArms.Tusk)
-		Arm.Parent = workspace
+		Arm.Parent = workspace.Debris
 		
 		local P0 : CFrame, P1 : CFrame, P2 : CFrame
 		
