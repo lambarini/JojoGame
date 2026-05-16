@@ -54,9 +54,19 @@ function HandleInput(Input : InputObject, GameProcessed : boolean)
 	Packets.MoveEvent:Fire(Input.KeyCode.Name, Input.UserInputState == Enum.UserInputState.Begin)
 end
 
+local function CharacterAdded(Character : Model)
+	Humanoid = Character:WaitForChild("Humanoid") :: Humanoid
+end
+
 function InputController.init()
 	UserInputService.InputBegan:Connect(HandleInput)
 	UserInputService.InputEnded:Connect(HandleInput)
+	
+	if Player.Character then
+		CharacterAdded(Player.Character)
+	end
+	
+	Player.CharacterAdded:Connect(CharacterAdded)
 end
 
 return InputController

@@ -29,6 +29,8 @@ else
 	PlayerStore = ProfileStore.New(DataStoreName, DataTemplate)
 end
 
+export type PlayerObject = PlayerObject.PlayerObject
+
 -- // MAIN \\ --
 
 function DataHandler:Load(Player : Player) : (PlayerObject.PlayerObject?)

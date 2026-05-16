@@ -58,48 +58,40 @@ function Ability.new(Player : Player) : Ability
 end
 
 function Ability:Summon()
-	local function SetupSummon()
-		self.StandAttach = self.AbilityManager._trove:Add(Instance.new("Attachment"))
-		self.StandAttach.Name = "StandAttach"
-		self.StandAttach.Parent = self.AbilityManager.Character.HumanoidRootPart
+	self.StandAttach = self.AbilityManager._trove:Add(Instance.new("Attachment"))
+	self.StandAttach.Name = "StandAttach"
+	self.StandAttach.Parent = self.AbilityManager.Character.HumanoidRootPart
 
-		self.Stand = self.AbilityManager._trove:Clone(StandsFolder.Tusk)
-		self.Stand.Name = "Stand"
-		self.Stand.Parent = self.AbilityManager.Character
+	self.Stand = self.AbilityManager._trove:Clone(StandsFolder.Tusk)
+	self.Stand.Name = "Stand"
+	self.Stand.Parent = self.AbilityManager.Character
 
-		self.Stand.AnimationController.Animator:LoadAnimation(Animations.StandIdle):Play()
+	self.Stand.AnimationController.Animator:LoadAnimation(Animations.StandIdle):Play()
 
-		local AlignPosition = Instance.new("AlignPosition")
-		AlignPosition.Attachment1 = self.StandAttach
-		AlignPosition.Attachment0 = self.Stand.HumanoidRootPart.RootAttachment
-		AlignPosition.MaxForce = math.huge
-		AlignPosition.MaxVelocity = math.huge
-		AlignPosition.MaxAxesForce = Vector3.one * math.huge
-		AlignPosition.Responsiveness = 65
-		AlignPosition.Parent = self.Stand.HumanoidRootPart
+	local AlignPosition = Instance.new("AlignPosition")
+	AlignPosition.Attachment1 = self.StandAttach
+	AlignPosition.Attachment0 = self.Stand.HumanoidRootPart.RootAttachment
+	AlignPosition.MaxForce = math.huge
+	AlignPosition.MaxVelocity = math.huge
+	AlignPosition.MaxAxesForce = Vector3.one * math.huge
+	AlignPosition.Responsiveness = 65
+	AlignPosition.Parent = self.Stand.HumanoidRootPart
 
-		local AlignOrientation = Instance.new("AlignOrientation")
-		AlignOrientation.Attachment1 = self.StandAttach
-		AlignOrientation.Attachment0 = self.Stand.HumanoidRootPart.RootAttachment
-		AlignOrientation.MaxTorque = math.huge
-		AlignOrientation.MaxAngularVelocity = math.huge
-		AlignOrientation.Responsiveness = 65
-		AlignOrientation.Parent = self.Stand.HumanoidRootPart
+	local AlignOrientation = Instance.new("AlignOrientation")
+	AlignOrientation.Attachment1 = self.StandAttach
+	AlignOrientation.Attachment0 = self.Stand.HumanoidRootPart.RootAttachment
+	AlignOrientation.MaxTorque = math.huge
+	AlignOrientation.MaxAngularVelocity = math.huge
+	AlignOrientation.Responsiveness = 65
+	AlignOrientation.Parent = self.Stand.HumanoidRootPart
 
-		for _, Part in self.Stand:GetChildren() do
-			if not Part:IsA("BasePart") then
-				continue
-			end
-
-			Part:SetNetworkOwner(self.AbilityManager.Player)
+	for _, Part in self.Stand:GetChildren() do
+		if not Part:IsA("BasePart") then
+			continue
 		end
+
+		Part:SetNetworkOwner(self.AbilityManager.Player)
 	end
-	
-	if self.AbilityManager.Character then
-		SetupSummon()
-	end
-	
-	self.AbilityManager.CharacterAdded:Connect(SetupSummon)
 	
 	return {
 		[true] = function()

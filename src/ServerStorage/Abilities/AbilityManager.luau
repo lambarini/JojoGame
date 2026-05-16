@@ -19,13 +19,22 @@ local CoreUtils = require(Modules.CoreUtils)
 export type AbilityManager = typeof(setmetatable({} :: {
 	Player : Player,
 	Character : CoreUtils.HumanoidR15,
-	CharacterAdded : SignalModule.Signal<CoreUtils.HumanoidR15>,
 	_trove : TroveModule.Trove,
 	Moves : {[string] : {
 		[boolean] : () -> (),
 	}},
+	Destroying : SignalModule.Signal<>,
 	Summoned : boolean,
 }, AbilityManager))
+
+export type AbilityClass = {
+	new: (Player: Player) -> AbilityInstance,
+}
+
+export type AbilityInstance = {
+	AbilityManager: AbilityManager,
+	Moves: {[string]: {[boolean]: () -> ()}},
+}
 
 function AbilityManager.new(Player : Player) : AbilityManager
 	local self = setmetatable({}, AbilityManager) :: AbilityManager
@@ -33,13 +42,20 @@ function AbilityManager.new(Player : Player) : AbilityManager
 	self.Player = Player
 	self.Character = Player.Character or Player.CharacterAdded:Wait() :: any
 	self._trove = TroveModule.new()
-	self.CharacterAdded = self._trove:Add(SignalModule.new())
+	self.Destroying = self._trove:Add(SignalModule.new())
 	
-	self._trove:Connect(Player.CharacterAdded, function(Character)
-		self.CharacterAdded:Fire(Character :: CoreUtils.HumanoidR15)
+	local Humanoid = self.Character:WaitForChild("Humanoid") :: Humanoid
+	
+	Humanoid.Died:Once(function()
+		self:Destroy()
 	end)
 	
 	return self
+end
+
+function AbilityManager.Destroy(self : AbilityManager)
+	self.Destroying:Fire()
+	self._trove:Destroy()
 end
 
 return AbilityManager

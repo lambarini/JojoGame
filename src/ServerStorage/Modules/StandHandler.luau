@@ -18,8 +18,8 @@ local DataHandler = require(Modules.DataHandler)
 local AbilityManager = require(ServerStorage.Abilities.AbilityManager)
 
 -- // VARIABLES \\ --
-local AbilityClasses : {[string] : AbilityManager.AbilityManager} = {}
-local PlayerAbilities : {[Player] : AbilityManager.AbilityManager} = {}
+local AbilityClasses: {[string]: AbilityManager.AbilityClass} = {}
+local PlayerAbilities: {[Player]: AbilityManager.AbilityInstance} = {}
 
 -- // FUNCTIONS \\ --
 
@@ -28,7 +28,7 @@ for _, Ability in ServerStorage.Abilities:GetChildren() do
 		continue
 	end
 	
-	AbilityClasses[Ability.Name] = require(Ability) :: AbilityManager.AbilityManager
+	AbilityClasses[Ability.Name] = require(Ability) :: AbilityManager.AbilityClass
 end
 
 local function HandleMoveEvent(Player : Player, Keybind : string, State : boolean)
@@ -53,6 +53,17 @@ end
 
 Packets.MoveEvent.OnServerEvent:Connect(HandleMoveEvent)
 
+local function CharacterAdded(PlayerObject : DataHandler.PlayerObject, Character : Model)
+	local StandName : string = PlayerObject:Get({"Stand"})
+	local Ability = AbilityClasses[StandName].new(PlayerObject.Player)
+
+	PlayerAbilities[PlayerObject.Player] = Ability
+	
+	Ability.AbilityManager.Destroying:Once(function()
+		PlayerAbilities[PlayerObject.Player] = nil
+	end)
+end
+
 function StandHandler.Setup(Player : Player)
 	local PlayerObject = DataHandler:GetPlayerObject(Player)
 	
@@ -60,10 +71,19 @@ function StandHandler.Setup(Player : Player)
 		return
 	end
 	
-	local StandName : string = PlayerObject:Get({"Stand"})
-	local Ability = AbilityClasses[StandName].new(Player)
+	if Player.Character then
+		CharacterAdded(PlayerObject, Player.Character)
+	end
 	
-	PlayerAbilities[Player] = Ability
+	Player.CharacterAdded:Connect(function(Character)
+		if not Player:HasAppearanceLoaded() then
+			Player.CharacterAppearanceLoaded:Wait()
+		end
+		
+		task.wait()
+		
+		CharacterAdded(PlayerObject, Character)
+	end)
 end
 
 return StandHandler

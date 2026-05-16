@@ -54,7 +54,7 @@ function PlayerHandler.init()
 	PlayersService.PlayerAdded:Connect(PlayerAdded)
 	PlayersService.PlayerRemoving:Connect(PlayerRemoving)
 	
-	Commands.SetStat.Triggered:Connect(function(TextSource, Text)
+	Commands.SetGlobal.Triggered:Connect(function(TextSource, Text)
 		local Player = PlayersService:GetPlayerByUserId(TextSource.UserId)
 		
 		if not Player then
