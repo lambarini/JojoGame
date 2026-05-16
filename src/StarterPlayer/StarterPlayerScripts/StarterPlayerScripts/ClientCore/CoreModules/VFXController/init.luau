@@ -8,7 +8,9 @@ local Packets = require(ReplicatedStorage.Packets)
 local EffectModules : {[string] : (...any) -> ()} = {}
 
 Packets.VFXEvent.OnClientEvent:Connect(function(EffectName : string, Data)
-	pcall(EffectModules[EffectName], Data)
+	xpcall(EffectModules[EffectName], function(Error) 
+		warn(`[VFXController]:[{EffectName}], {Error}`)
+	end, Data)
 end)
 
 return {
