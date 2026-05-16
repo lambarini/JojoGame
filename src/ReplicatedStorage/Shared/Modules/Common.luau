@@ -63,4 +63,11 @@ function Common.EmitVFX(VFX : BasePart | Attachment)
 	end
 end
 
+function Common.Weld(Target : BasePart, Anchor : BasePart)
+	local WeldConstraint = Instance.new("WeldConstraint")
+	WeldConstraint.Part0 = Anchor
+	WeldConstraint.Part1 = Target
+	WeldConstraint.Parent = Anchor
+end
+
 return Common

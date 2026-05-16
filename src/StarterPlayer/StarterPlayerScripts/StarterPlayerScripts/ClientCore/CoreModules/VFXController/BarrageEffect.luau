@@ -8,7 +8,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- // FOLDERS \\ --
 local Shared = ReplicatedStorage.Shared
 local Modules = Shared.Modules
-local BarrageArms = Shared.FX.BarrageArms
+local FXFolder = Shared.FX
+local BarrageArms = FXFolder.BarrageArms
 
 -- // MODULES \\ --
 local TroveModule = require(Modules.Trove)
@@ -32,7 +33,9 @@ return function(Data : {})
 	local Rand = Random.new()
 	
 	local HumanoidRootPart = Character.HumanoidRootPart
-		
+	local BarrageEffect = FXFolder.BarrageEffect:Clone()
+	BarrageEffect.Parent = workspace.Debris
+	
 	local function SpawnArm()
 		local Duration = Rand:NextNumber(0.3, 0.5)
 		local Start = os.clock()
@@ -71,9 +74,9 @@ return function(Data : {})
 			local C1 = Bezier((Position * P0).Position, (Position * P1).Position, (Position * P2).Position, T)
 			local C2 = Bezier((Position * P0).Position, (Position * P1).Position, (Position * P2).Position, T + 0.05)
 			
-			if T > 0.4 then
+			if T > 0.3 then
 				for _, Part in Parts do
-					Part.Transparency = (T - 0.35) / 0.6 
+					Part.Transparency = (T - 0.3) / 0.6 
 				end
 			end
 			
@@ -82,6 +85,9 @@ return function(Data : {})
 	end
 	
 	while task.wait() and Barrages[Character] do
+		BarrageEffect.PrimaryPart.CFrame = HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(90), 0)
 		SpawnArm()
 	end
+	
+	BarrageEffect:Destroy()
 end
