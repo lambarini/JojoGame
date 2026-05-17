@@ -54,7 +54,7 @@ local function SetupStand(Stand : Common.HumanoidR15)
 	local function UpdateStandTransparency()
 		local Summoned = Character:GetAttribute("Summoned") :: boolean
 		
-		if Summoned == nil then
+		if not Stand then
 			return
 		end
 		
@@ -78,8 +78,15 @@ local function SetupStand(Stand : Common.HumanoidR15)
 			end
 		end
 	end
+	
+	local LastSummon = nil
 
 	local function PlaySummonSound()
+		if LastSummon == nil then
+			LastSummon = Character:GetAttribute("Summoned")
+			return
+		end
+		
 		if Character:GetAttribute("Summoned") then
 			Common.PlaySoundAt(Stand.HumanoidRootPart, SFX.StandSummon)
 			
@@ -150,10 +157,10 @@ end
 
 PlayersService.PlayerAdded:Connect(PlayerAdded)
 
-for _, Stand in CollectionService:GetTagged("STAND_TAG") do
-	task.spawn(SetupStand, Stand)
-end
-
 CollectionService:GetInstanceAddedSignal("STAND_TAG"):Connect(SetupStand)
+
+for _, Stand in CollectionService:GetTagged("STAND_TAG") do
+	SetupStand(Stand)
+end
 
 return nil

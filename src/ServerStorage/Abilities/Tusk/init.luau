@@ -63,7 +63,9 @@ function Ability:Summon()
 	self.StandAttach.Parent = self.AbilityManager.Character.HumanoidRootPart
 
 	self.Stand = self.AbilityManager._trove:Clone(StandsFolder.Tusk)
+	self.Stand.ModelStreamingMode = Enum.ModelStreamingMode.Atomic
 	self.Stand.Name = "Stand"
+	self.Stand:PivotTo(self.AbilityManager.Character:GetPivot())
 	self.Stand.Parent = self.AbilityManager.Character
 
 	self.Stand.AnimationController.Animator:LoadAnimation(Animations.StandIdle):Play()
