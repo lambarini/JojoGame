@@ -21,6 +21,7 @@ local Animations = script.Animations
 local HitboxModule = require(Modules.Hitbox)
 local TroveModule = require(SharedModules.Trove)
 local CoreUtils = require(Modules.CoreUtils)
+local Combat = require(Modules.Combat)
 local SignalModule = require(SharedModules.Signal)
 local Packets = require(ReplicatedStorage.Packets)
 local DataHandler = require(Modules.DataHandler)
@@ -28,6 +29,7 @@ local AbilityManager = require(ServerStorage.Abilities.AbilityManager)
 
 -- // VARIABLES \\ --
 
+local StandName = script.Name
 local StandOutPos = Vector3.new(-3.5, 1.5, 1.5)
 
 type Ability = typeof(setmetatable({} :: {
@@ -179,7 +181,10 @@ function Ability:Barrage()
 						blacklist[Enemy] = nil
 					end)
 					
-					Enemy.Humanoid.Health -= 1.2
+					Combat.Damage(self.AbilityManager.Character, Enemy, {
+						MoveName = "Barrage",
+						StandName = StandName,
+					})
 				end,
 			})
 
