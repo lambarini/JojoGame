@@ -11,6 +11,7 @@ local Modules = ServerStorage.Modules
 
 -- // MODULES \\ --
 local StandData = require(Data.StandData)
+local Packets = require(ReplicatedStorage.Packets)
 local CoreUtils = require(Modules.CoreUtils)
 
 function Combat.Damage(Attacker : CoreUtils.HumanoidR15, Target : CoreUtils.HumanoidR15, Data : {
@@ -29,7 +30,13 @@ function Combat.Damage(Attacker : CoreUtils.HumanoidR15, Target : CoreUtils.Huma
 		return
 	end
 	
-	Humanoid.Health -= MoveData.Damage
+	local Damage = MoveData.Damage
+	
+	Humanoid.Health -= Damage
+	
+	Packets.VFXEvent:Fire("HitEffect", {
+		Damage = Damage
+	})
 end
 
 return Combat

@@ -10,10 +10,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CoreModules = script.CoreModules
 
 -- // MODULES \\ --
+local SignalModule = require(ReplicatedStorage.Shared.Modules.Signal)
 local Replica = require(ReplicatedStorage.ReplicaClient)
 
 -- // VARUABLES \\ --
 local Player = PlayersService.LocalPlayer
+local Signal = SignalModule.new()
 
 -- // MAIN \\ --
 
@@ -28,8 +30,8 @@ for _, Module in CoreModules:GetChildren() do
 		continue
 	end
 	
-	local Core = require(Module) :: {init : () -> ()}
-	task.spawn(Core.init)
+	local Core = require(Module) :: {init : (Signal : SignalModule.Signal<...any>) -> ()}
+	task.spawn(Core.init, Signal)
 end
 
 Replica.RequestData()

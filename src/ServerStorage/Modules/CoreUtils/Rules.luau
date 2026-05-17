@@ -56,7 +56,7 @@ function Rules.IsValueSaveable(Value : any) : (boolean, string?)
 		return false, Message
 	end
 	
-	return Status
+	return Status, Message
 end
 
 return Rules
