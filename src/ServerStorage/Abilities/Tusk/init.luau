@@ -153,9 +153,6 @@ function Ability:Barrage()
 
 			local BarrageActive = true
 
-			Humanoid.WalkSpeed = 3
-			Humanoid.JumpPower = 0
-
 			CoreUtils.Common:SetAttributes(self.AbilityManager.Character, {
 				Barraging = true,
 				UsingMove = true,
@@ -210,9 +207,6 @@ function Ability:Barrage()
 						Barraging = false,
 						UsingMove = false,
 					})
-					
-					Humanoid.WalkSpeed = 16
-					Humanoid.JumpPower = 50
 					
 					Packets.VFXEvent:Fire("BarrageEffect", {self.AbilityManager.Character, false})
 
