@@ -13,11 +13,7 @@ function GetCharacterSpeed() : number
 	local WalkSpeed = 16
 	local Attributes = Character:GetAttributes()
 	
-	if Attributes.Running then
-		WalkSpeed = 23
-	end
-	
-	if Attributes.UsingMove then
+	if Attributes.UsingMove or Attributes.Stunned then
 		WalkSpeed = 3
 	end
 	
@@ -31,11 +27,16 @@ local function GetJumpPower() : number
 	if Attributes.UsingMove then
 		JumpPower = 0
 	end
+	
+	if Attributes.Stunned then
+		JumpPower = 0
+	end
 
 	return JumpPower
 end
 
-local function CharacterAdded(Character : Model)
+local function CharacterAdded(Char : Model)
+	Character = Char
 	Humanoid = Character:WaitForChild("Humanoid") :: Humanoid
 	
 	Character.AttributeChanged:Connect(function()

@@ -38,6 +38,7 @@ type Ability = typeof(setmetatable({} :: {
 	StandAttach : Attachment,
 	Stand : typeof(StandsFolder.Tusk),
 	Summoned : boolean,
+	BarrageCancelEvent : SignalModule.Signal<>,
 	CanSummon : boolean,
 }, Ability))
 
@@ -55,6 +56,7 @@ function Ability.new(Player : Player) : Ability
 	self.Summoned = false
 
 	self.AbilityManager.Character:SetAttribute("Summoned", false)
+	self.AbilityManager.Character.Parent = workspace.Living
 	
 	return self
 end
@@ -113,10 +115,16 @@ function Ability:Summon()
 				task.delay(1.5, function()
 					self.CanSummon = true
 				end)
+				
+				self.BarrageCancelEvent:Fire()
 
 				--plrInfo.UserIdle:Stop(.5)
 			else
-				--if Attributes.Stunned then return false end
+				if not Combat.CanUseMove(self.AbilityManager.Character, {
+					RequiresStand = false
+					}) then
+					return
+				end
 				
 				self.StandAttach.Position = Vector3.new(-3.5, 1.5, 1.5)
 				self.Summoned = true
@@ -139,21 +147,21 @@ function Ability:Summon()
 end
 
 function Ability:Barrage()
-	local BarrageCancelEvent = self.AbilityManager._trove:Add(SignalModule.new())
+	self.BarrageCancelEvent = self.AbilityManager._trove:Add(SignalModule.new())
 
 	return {
 		[true] = function()
 			local Humanoid = self.AbilityManager.Character.Humanoid
 			local Attributes = self.AbilityManager.Character:GetAttributes()
 
-			if Attributes.UsingMove
-				or Attributes.Blocking
-				or not Attributes.Summoned
-				or Humanoid.Health <= 0 
-				or Attributes.Ragdolled
-				or Attributes.Barraging then return end
+			if not Combat.CanUseMove(self.AbilityManager.Character, {
+					IgnoreStun = true
+				}) then
+				return
+			end
 
 			local BarrageActive = true
+			local BarrageTrove = self.AbilityManager._trove:Add(TroveModule.new())
 
 			CoreUtils.Common:SetAttributes(self.AbilityManager.Character, {
 				Barraging = true,
@@ -177,10 +185,10 @@ function Ability:Barrage()
 
 					blacklist[Enemy] = true
 
-					task.delay(.15, function()
+					task.delay(.1, function()
 						blacklist[Enemy] = nil
 					end)
-					
+
 					Combat.Damage(self.AbilityManager.Character, Enemy, {
 						MoveName = "Barrage",
 						StandName = StandName,
@@ -193,20 +201,15 @@ function Ability:Barrage()
 			--BarrageAnim.Priority = Enum.AnimationPriority.Action
 			--BarrageAnim:Play()
 
-			local Connection, Task
-
 			local function Cancel()
+				BarrageTrove:Destroy()
+				
 				if BarrageActive then
 					BarrageActive = false
+					
 					--Bindables.AddCooldown:Fire(Player, "Barrage", 7)
 
-					Hitbox:Destroy()
-
 					self.StandAttach.Position = StandOutPos
-
-					if Connection and Connection.Connected then
-						Connection:Disconnect()
-					end
 
 					CoreUtils.Common:SetAttributes(self.AbilityManager.Character, {
 						Barraging = false,
@@ -221,17 +224,22 @@ function Ability:Barrage()
 				end
 			end
 
-			BarrageCancelEvent:Once(Cancel)
-			Connection = self.AbilityManager.Character:GetAttributeChangedSignal("Ragdolled"):Once(function()
+			self.BarrageCancelEvent:Once(Cancel)
+			BarrageTrove:Connect(self.AbilityManager.Character:GetAttributeChangedSignal("Ragdolled"), function()
 				if BarrageActive then
-					BarrageCancelEvent:Fire()
+					self.BarrageCancelEvent:Fire()
 				end
 			end)
 
 			task.delay(8, function()
 				if BarrageActive then
-					BarrageCancelEvent:Fire()
+					self.BarrageCancelEvent:Fire()
 				end
+			end)
+			
+			BarrageTrove:Add(function()
+				Hitbox:Destroy()
+				Cancel()
 			end)
 			
 			return
@@ -240,7 +248,7 @@ function Ability:Barrage()
 			local Attributes = self.AbilityManager.Character:GetAttributes()
 
 			if Attributes.UsingMove and Attributes.Barraging then
-				BarrageCancelEvent:Fire()
+				self.BarrageCancelEvent:Fire()
 			end
 		end,
 	}
