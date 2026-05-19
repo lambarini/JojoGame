@@ -23,17 +23,28 @@ local InstanceNew = Instance.new
 
 local ForceField = Enum.Material.ForceField
 
-export type self = {
-	Enabled : boolean,
-	Size : Vector3,
-	Offset : Vector3,
-	Part : Part,
-	Character : Model,
-	OverlapParams : OverlapParams,
-	Hitbox : Part,
-	HitboxCheck : RBXScriptConnection,
-	Lingering : boolean,
+type HitboxImpl = {
+	__index: HitboxImpl,
+	new: (...any) -> Hitbox,
+	Destroy: (Hitbox) -> (),
 }
+
+type HitboxProps = {
+	Enabled: boolean,
+	Size: Vector3,
+	Offset: Vector3,
+	Part: BasePart,
+	Character: Model,
+	OverlapParams: OverlapParams,
+	Hitbox: Part,
+	Debug: boolean,
+	HitOnce: boolean,
+	HitboxCheck: RBXScriptConnection,
+	Lingering: boolean,
+	Callback: (Enemy: CoreUtils.HumanoidR15) -> (),
+}
+
+export type Hitbox = typeof(setmetatable({} :: HitboxProps, {} :: HitboxImpl))
 
 local Alive = workspace.Living
 local Debris = workspace.Debris
@@ -47,8 +58,8 @@ function Hitbox.new(Parameters : {
 	HitOnce : boolean?,
 	Callback : (Enemy : CoreUtils.HumanoidR15) -> nil,
 	Lingering : boolean?,
-})
-	local self = setmetatable({}, Hitbox)
+	}) : Hitbox
+	local self = setmetatable({} :: HitboxProps, Hitbox)
 
 	self.Enabled = true
 	self.Size = Parameters.Size
@@ -56,7 +67,7 @@ function Hitbox.new(Parameters : {
 	self.Part = Parameters.TargetPart
 	self.Callback = Parameters.Callback
 	self.Character = Parameters.Character
-	self.HitOnce = Parameters.HitOnce
+	self.HitOnce = Parameters.HitOnce or false
 	self.Lingering = Parameters.Lingering or false
 	self.OverlapParams = Parameters.OverlapParams or Params1
 	self.Debug = _G.DEBUG_MODE

@@ -17,21 +17,18 @@ local CoreUtils = require(Modules.CoreUtils)
 function Combat.Damage(Attacker : CoreUtils.HumanoidR15, Target : CoreUtils.HumanoidR15, Data : {
 	MoveName : string,
 	StandName : string,
+	MoveInfo : {[any] : any}?,
 })
 	local MoveData = StandData[Data.StandName][Data.MoveName]
 	
-	if not MoveData then
-		return
+	if Data.MoveInfo then
+		MoveData = Data.MoveInfo
 	end
 	
 	local Humanoid = Target.Humanoid
-	
-	if not Humanoid or Humanoid.Health <= 0 then
-		return
-	end
-	
 	local Attributes = Target:GetAttributes()
-	if Attributes.Invincible then
+	
+	if not MoveData or not Humanoid or Humanoid.Health <= 0 or Attributes.Invincible then
 		return
 	end
 	

@@ -13,6 +13,7 @@ local PlayersService = game:GetService("Players")
 -- // FOLDERS \\ --
 local Shared = ReplicatedStorage.Shared
 local SharedModules = Shared.Modules
+local SharedData = Shared.Data
 local Modules = ServerStorage.Modules
 local StandsFolder = ReplicatedStorage.Stands
 local Animations = script.Animations
@@ -25,6 +26,7 @@ local Combat = require(Modules.Combat)
 local SignalModule = require(SharedModules.Signal)
 local Packets = require(ReplicatedStorage.Packets)
 local DataHandler = require(Modules.DataHandler)
+local StandData = require(SharedData.StandData)
 local AbilityManager = require(ServerStorage.Abilities.AbilityManager)
 
 -- // VARIABLES \\ --
@@ -49,7 +51,8 @@ function Ability.new(Player : Player) : Ability
 	
 	self.Moves = {
 		Summon = self:Summon(),
-		Barrage = self:Barrage()
+		Barrage = self:Barrage(),
+		M1 = self:M1(),
 	}
 	
 	self.CanSummon = true
@@ -139,6 +142,85 @@ function Ability:Summon()
 				--plrInfo.UserIdle:Play(.5)
 			end 
 
+		end,
+		[false] = function()
+			
+		end,
+	}
+end
+
+function Ability:M1()
+	local Last = os.clock()
+	local Sequence = 0
+	
+	return {
+		[true] = function()
+			if not Combat.CanUseMove(self.AbilityManager.Character) then
+				return
+			end
+			
+			if os.clock() - Last >= 0.9 then
+				Sequence = 1
+			else
+				Sequence += 1
+
+				if Sequence > #StandData.Tusk.M1 then
+					Sequence = 1
+				end
+			end
+
+			Last = os.clock()
+			
+			local Trove = self.AbilityManager._trove:Add(TroveModule.new())
+
+			CoreUtils.Common:SetAttributes(self.AbilityManager.Character, {
+				UsingMove = true,
+			})
+			
+			self.StandAttach.Position = Vector3.new(0, 0, -2)
+
+			local Hitbox = HitboxModule.new({
+				Size = Vector3.new(4, 4, 5),
+				Offset = Vector3.new(0, 0, -2.5),
+				TargetPart = self.AbilityManager.Character.HumanoidRootPart,
+				Lingering = true,
+				HitOnce = true,
+				Character = self.AbilityManager.Character,
+				Callback = function(Enemy : CoreUtils.HumanoidR15)
+					Combat.Damage(self.AbilityManager.Character, Enemy, {
+						MoveName = "M1",
+						StandName = StandName,
+						MoveInfo = StandData.Tusk.M1[Sequence]
+					})
+				end,
+			})
+			
+			Trove:Add(Hitbox :: any)
+			
+			Trove:Add(function()
+				CoreUtils.Common:SetAttributes(self.AbilityManager.Character, {
+					UsingMove = false,
+					Endlag = true,
+				})
+				
+				Hitbox:Destroy()
+				
+				local CurrentSequence = Sequence
+				
+				task.delay(StandData.Tusk.M1[Sequence].Endlag, function()
+					if CurrentSequence == Sequence then
+						self.AbilityManager.Character:SetAttribute("Endlag", false)
+					end
+					
+					if not self.AbilityManager.Character:GetAttribute("UsingMove") then
+						self.StandAttach.Position = StandOutPos
+					end
+				end)
+			end)
+			
+			task.delay(.35, function()
+				Trove:Destroy()
+			end)
 		end,
 		[false] = function()
 			

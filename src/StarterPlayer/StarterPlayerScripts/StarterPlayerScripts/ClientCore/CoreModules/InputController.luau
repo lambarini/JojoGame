@@ -16,6 +16,8 @@ local Character = Player.Character or Player.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid") :: Humanoid
 
 local Whitelist = {
+	MouseButton1 = true,
+	MouseButton2 = true,
 	Q = true,
 	E = true,
 	R = true,
@@ -47,11 +49,23 @@ function HandleInput(Input : InputObject, GameProcessed : boolean)
 		return
 	end
 	
-	if not Whitelist[Input.KeyCode.Name] then
+	local UserInputState = Input.UserInputState
+	if UserInputState.Value ~= 0 and UserInputState.Value ~= 2 then
+		return
+	end
+
+	local InputEnum : Enum.UserInputType | Enum.KeyCode = Input.UserInputType
+	if InputEnum == Enum.UserInputType.Keyboard then
+		InputEnum = Input.KeyCode
+	end
+
+	local MoveName = InputEnum.Name
+	
+	if not Whitelist[MoveName] then
 		return
 	end
 	
-	Packets.MoveEvent:Fire(Input.KeyCode.Name, Input.UserInputState == Enum.UserInputState.Begin)
+	Packets.MoveEvent:Fire(MoveName, Input.UserInputState == Enum.UserInputState.Begin)
 end
 
 local function CharacterAdded(Character : Model)

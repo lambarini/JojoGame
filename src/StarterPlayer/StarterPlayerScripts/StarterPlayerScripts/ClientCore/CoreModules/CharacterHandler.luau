@@ -13,7 +13,7 @@ function GetCharacterSpeed() : number
 	local WalkSpeed = 16
 	local Attributes = Character:GetAttributes()
 	
-	if Attributes.UsingMove or Attributes.Stunned then
+	if Attributes.UsingMove or Attributes.Stunned or Attributes.Endlag then
 		WalkSpeed = 3
 	end
 	
@@ -29,6 +29,10 @@ local function GetJumpPower() : number
 	end
 	
 	if Attributes.Stunned then
+		JumpPower = 0
+	end
+	
+	if Attributes.Endlag then
 		JumpPower = 0
 	end
 
