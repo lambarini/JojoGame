@@ -47,7 +47,8 @@ function Combat.Damage(Attacker : CoreUtils.HumanoidR15, Target : CoreUtils.Huma
 	Humanoid.Health -= Damage
 	
 	Packets.VFXEvent:Fire("HitEffect", {
-		Damage = Damage
+		Damage = Damage,
+		Character = Target,
 	})
 end
 

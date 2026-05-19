@@ -22,9 +22,7 @@ return {
 		Signal = Event
 	end,
 	
-	run = function(Data : {})
-		local Character : Common.HumanoidR15, Damage : number = table.unpack(Data)
-
-		Signal:Fire("SoundController", "Hit")
+	run = function(Data : {Character : Common.HumanoidR15, Damage : number})
+		Signal:Fire("SoundController", "Hit", Data.Character.HumanoidRootPart)
 	end
 }

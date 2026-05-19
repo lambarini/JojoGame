@@ -12,13 +12,28 @@ local SignalModule = require(ReplicatedStorage.Shared.Modules.Signal)
 -- // FOLDERS \\ --
 local SFX = SoundService.SFX
 
-local function HandleSound(Sound : string)
+local function HandleSound(Sound : string, Target : BasePart?)
 	local Arg1, Arg2 = unpack(string.split(Sound, "/"))
+	
+	local Sound : Sound
 
 	if Arg2 == nil then
-		SFX[Arg1]:Play()
+		Sound = SFX[Arg1]
 	else
-		SFX[Arg1][Arg2]:Play()
+		Sound = SFX[Arg1][Arg2]
+	end
+	
+	if not Target then
+		Sound:Play()
+	else
+		local Clone = Sound:Clone()
+		Clone.Parent = Target
+		
+		Clone:Play()
+		
+		Clone.Ended:Connect(function()
+			Clone:Destroy()
+		end)
 	end
 end
 
