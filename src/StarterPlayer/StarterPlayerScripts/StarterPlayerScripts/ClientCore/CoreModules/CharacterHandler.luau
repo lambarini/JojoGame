@@ -9,11 +9,15 @@ local Player = PlayersService.LocalPlayer
 local Character = Player.Character or Player.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid") :: Humanoid
 
+local function IsStunned() : boolean
+	return os.clock() < (Character:GetAttribute("Stun") or 0)
+end
+
 function GetCharacterSpeed() : number
 	local WalkSpeed = 16
 	local Attributes = Character:GetAttributes()
 	
-	if Attributes.UsingMove or Attributes.Stunned or Attributes.Endlag then
+	if Attributes.UsingMove or IsStunned() or Attributes.Endlag then
 		WalkSpeed = 3
 	end
 	
@@ -28,7 +32,7 @@ local function GetJumpPower() : number
 		JumpPower = 0
 	end
 	
-	if Attributes.Stunned then
+	if IsStunned() then
 		JumpPower = 0
 	end
 	
