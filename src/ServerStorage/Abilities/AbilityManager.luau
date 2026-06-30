@@ -22,7 +22,11 @@ local HitboxModule = require(Modules.Hitbox)
 local Combat = require(Modules.Combat)
 local StandData = require(SharedData.StandData)
 
-export type Dispatch = {[boolean] : () -> ()}
+export type InputInfo = {
+	MousePos : Vector3,
+}
+
+export type Dispatch = {[boolean] : (InputInfo) -> ()}
 
 export type AbilityManager = typeof(setmetatable({} :: {
 	Player : Player,
@@ -30,9 +34,7 @@ export type AbilityManager = typeof(setmetatable({} :: {
 	Character : CoreUtils.HumanoidR15,
 	_trove : TroveModule.Trove,
 	BaseMoves : {[string] : Dispatch},
-	Moves : {[string] : {
-		[boolean] : () -> (),
-	}},
+	Moves : {[string] : Dispatch},
 	Destroying : SignalModule.Signal<>,
 	Summoned : boolean,
 }, AbilityManager))
@@ -43,7 +45,7 @@ export type AbilityClass = {
 
 export type AbilityInstance = {
 	AbilityManager: AbilityManager,
-	Moves: {[string]: {[boolean]: () -> ()}},
+	Moves: {[string]: Dispatch},
 }
 
 -- // FUNCTIONS \\ --

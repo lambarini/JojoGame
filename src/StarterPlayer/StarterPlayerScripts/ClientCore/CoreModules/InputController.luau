@@ -14,6 +14,7 @@ local Packets = require(ReplicatedStorage.Packets)
 local Player = PlayersService.LocalPlayer
 local Character = Player.Character or Player.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid") :: Humanoid
+local Mouse = Player:GetMouse()
 
 local Whitelist = {
 	MouseButton1 = true,
@@ -65,7 +66,7 @@ function HandleInput(Input : InputObject, GameProcessed : boolean)
 		return
 	end
 	
-	Packets.MoveEvent:Fire(MoveName, Input.UserInputState == Enum.UserInputState.Begin)
+	Packets.MoveEvent:Fire(MoveName, Input.UserInputState == Enum.UserInputState.Begin, Mouse.Hit.Position)
 end
 
 local function CharacterAdded(Character : Model)

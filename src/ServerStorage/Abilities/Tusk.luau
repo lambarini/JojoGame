@@ -20,6 +20,7 @@ local Animations = script.Animations
 
 -- // MODULES \\ --
 local HitboxModule = require(Modules.Hitbox)
+local ProjectileModule = require(Modules.Projectile)
 local TroveModule = require(SharedModules.Trove)
 local CoreUtils = require(Modules.CoreUtils)
 local Combat = require(Modules.Combat)
@@ -36,7 +37,7 @@ local StandOutPos = Vector3.new(-3.5, 1.5, 1.5)
 
 type Ability = typeof(setmetatable({} :: {
 	AbilityManager : AbilityManager.AbilityManager,
-	Moves : {[string] : {[boolean] : () -> ()}},
+	Moves : {[string] : AbilityManager.Dispatch},
 	StandAttach : Attachment,
 	Stand : typeof(StandsFolder.Tusk),
 	Summoned : boolean,
@@ -80,15 +81,59 @@ function Ability.new(Player : Player) : Ability
 		Summon = self:Summon(),
 		Barrage = self:Barrage(),
 		M1 = self:M1(),
+		NailShot = self:NailShot(),
 	}
-	
+
 	self.CanSummon = true
 	self.Summoned = false
 
 	self.AbilityManager.Character:SetAttribute("Summoned", false)
 	self.AbilityManager.Character.Parent = workspace.Living
-	
+
 	return self
+end
+
+function Ability:NailShot()
+	return {
+		[true] = function(Info : AbilityManager.InputInfo)
+			if not Combat.CanUseMove(self.AbilityManager.Character, {
+				RequiresStand = true
+				}) then
+				return
+			end
+
+			local Origin = self.Stand.HumanoidRootPart.Position
+			local Offset = Info.MousePos - Origin
+
+			if Offset.Magnitude == 0 then
+				return
+			end
+
+			local Data = StandData.Tusk.NailShot
+
+			self.AbilityManager.PlayerObject:SetCooldown("NailShot", Data.Cooldown)
+
+			ProjectileModule.new({
+				Origin = Origin,
+				Direction = Offset.Unit,
+				Speed = Data.Speed,
+				Range = Data.Range,
+				Character = self.AbilityManager.Character,
+				Pierce = Data.Pierce,
+				Visual = "Nail",
+				Callback = function(Enemy : CoreUtils.HumanoidR15)
+					Combat.Damage(self.AbilityManager.Character, Enemy, {
+						MoveName = "NailShot",
+						StandName = StandName,
+						MoveInfo = Data,
+					})
+				end,
+			})
+		end,
+		[false] = function()
+
+		end,
+	}
 end
 
 function Ability:Summon()
@@ -185,9 +230,9 @@ function Ability:M1()
 	local CurrentTrack : AnimationTrack? = nil
 
 	return {
-		[true] = function()
+		[true] = function(InputInfo)
 			if not self.Summoned then
-				self.AbilityManager.BaseMoves.M1[true]()
+				self.AbilityManager.BaseMoves.M1[true](InputInfo)
 				return
 			end
 
@@ -283,7 +328,8 @@ function Ability:Barrage()
 			local Attributes = self.AbilityManager.Character:GetAttributes()
 
 			if not Combat.CanUseMove(self.AbilityManager.Character, {
-					IgnoreStun = true
+					IgnoreStun = true,
+					RequiresStand = true,
 				}) then
 				return
 			end

@@ -18,7 +18,7 @@ local DataTemplate = require(Data.DataTemplate)
 local PlayerObject = require(script.PlayerObject)
 
 -- // VARIABLES \\ --
-local DataStoreName = "PlayerDataDev2"
+local DataStoreName = "PlayerDataDev3"
 
 local PlayerStore = nil
 local Profiles : {[Player] : PlayerObject.PlayerObject} = {}

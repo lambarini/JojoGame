@@ -32,7 +32,15 @@ return {
 				StunTime = 0.8,
 				Endlag = 0.15,
 			},
-		}
+		},
+		NailShot = {
+			Damage = 4,
+			StunTime = 0.3,
+			Speed = 200,
+			Range = 200,
+			Cooldown = 1.5,
+			Pierce = false,
+		},
 	},
 	Standless = {
 		M1 = {

@@ -31,7 +31,7 @@ for _, Ability in ServerStorage.Abilities:GetChildren() do
 	AbilityClasses[Ability.Name] = require(Ability) :: AbilityManager.AbilityClass
 end
 
-local function HandleMoveEvent(Player : Player, Keybind : string, State : boolean)
+local function HandleMoveEvent(Player : Player, Keybind : string, State : boolean, Hit : Vector3)
 	local PlayerObject = DataHandler:GetPlayerObject(Player)
 
 	if not PlayerObject then
@@ -52,7 +52,9 @@ local function HandleMoveEvent(Player : Player, Keybind : string, State : boolea
 		return
 	end
 	
-	MoveFunction[State]()
+	MoveFunction[State]({
+		MousePos = Hit
+	})
 end
 
 Packets.MoveEvent.OnServerEvent:Connect(HandleMoveEvent)
