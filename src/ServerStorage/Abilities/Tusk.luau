@@ -202,6 +202,10 @@ function Ability:M1()
 					Sequence = 1
 				end
 			end
+			
+			if Sequence == #StandData.Tusk.M1 then
+				self.AbilityManager.PlayerObject:SetCooldown("M1", 2)
+			end
 
 			Last = os.clock()
 
@@ -290,10 +294,6 @@ function Ability:Barrage()
 			if not Combat.CanUseMove(self.AbilityManager.Character, {
 					IgnoreStun = true
 				}) then
-				return
-			end
-
-			if self.AbilityManager.PlayerObject:IsOnCooldown("Barrage") then
 				return
 			end
 

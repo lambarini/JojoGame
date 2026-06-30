@@ -48,6 +48,10 @@ local function HandleMoveEvent(Player : Player, Keybind : string, State : boolea
 		return
 	end
 	
+	if PlayerObject:IsOnCooldown(MoveName) then
+		return
+	end
+	
 	MoveFunction[State]()
 end
 
