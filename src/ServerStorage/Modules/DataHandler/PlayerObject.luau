@@ -25,10 +25,15 @@ local DataToken = ReplicaServer.Token("PlayerData")
 
 export type Profile = typeof(ProfileStore.New("PlayerStore", DataTemplate):StartSessionAsync("1", {}))
 
+export type SessionData = {
+	Cooldowns : {[string] : number},
+}
+
 export type PlayerObject = typeof(setmetatable({} :: {
 	Player : Player,
 	Profile : Profile,
 	Replica : ReplicaServer.Replica<typeof(DataTemplate)>,
+	SessionData : SessionData,
 	_trove : TroveModule.Trove
 }, PlayerObject))
 
@@ -37,6 +42,9 @@ function PlayerObject.new(Player : Player, Profile : Profile) : PlayerObject
 
 	self.Player = Player
 	self.Profile = Profile
+	self.SessionData = {
+		Cooldowns = {},
+	}
 	self._trove = TroveModule.new()
 	self.Replica = self._trove:Add(ReplicaServer.New({
 		Token = DataToken,
@@ -130,6 +138,32 @@ function PlayerObject.TableRemove(self : PlayerObject, Key : {string}, Index : n
 	end
 
 	self.Replica:TableRemove(Key, Index)
+end
+
+-- // SESSION DATA \\ --
+
+function PlayerObject.SetCooldown(self : PlayerObject, Name : string, Duration : number) : ()
+	self.SessionData.Cooldowns[Name] = os.clock() + Duration
+end
+
+function PlayerObject.IsOnCooldown(self : PlayerObject, Name : string) : boolean
+	local Expiry = self.SessionData.Cooldowns[Name]
+
+	if not Expiry then
+		return false
+	end
+
+	return os.clock() < Expiry
+end
+
+function PlayerObject.GetCooldown(self : PlayerObject, Name : string) : number
+	local Expiry = self.SessionData.Cooldowns[Name]
+
+	if not Expiry then
+		return 0
+	end
+
+	return math.max(Expiry - os.clock(), 0)
 end
 
 -- TODO: Implement PlayerObject:SetValues() based on replica SetValues (still dont understand how it works)

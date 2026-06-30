@@ -15,9 +15,11 @@ local SharedModules = Shared.Modules
 local TroveModule = require(SharedModules.Trove)
 local SignalModule = require(SharedModules.Signal)
 local CoreUtils = require(Modules.CoreUtils)
+local DataHandler = require(Modules.DataHandler)
 
 export type AbilityManager = typeof(setmetatable({} :: {
 	Player : Player,
+	PlayerObject : DataHandler.PlayerObject,
 	Character : CoreUtils.HumanoidR15,
 	_trove : TroveModule.Trove,
 	Moves : {[string] : {
@@ -40,6 +42,7 @@ function AbilityManager.new(Player : Player) : AbilityManager
 	local self = setmetatable({}, AbilityManager) :: AbilityManager
 	
 	self.Player = Player
+	self.PlayerObject = DataHandler:GetPlayerObject(Player)
 	self.Character = Player.Character or Player.CharacterAdded:Wait() :: any
 	self._trove = TroveModule.new()
 	self.Destroying = self._trove:Add(SignalModule.new())

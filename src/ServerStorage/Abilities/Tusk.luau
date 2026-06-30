@@ -293,6 +293,10 @@ function Ability:Barrage()
 				return
 			end
 
+			if self.AbilityManager.PlayerObject:IsOnCooldown("Barrage") then
+				return
+			end
+
 			local BarrageActive = true
 			local BarrageTrove = self.AbilityManager._trove:Add(TroveModule.new())
 
@@ -339,8 +343,8 @@ function Ability:Barrage()
 				
 				if BarrageActive then
 					BarrageActive = false
-					
-					--Bindables.AddCooldown:Fire(Player, "Barrage", 7)
+
+					self.AbilityManager.PlayerObject:SetCooldown("Barrage", 7)
 
 					self.StandAttach.Position = StandOutPos
 
