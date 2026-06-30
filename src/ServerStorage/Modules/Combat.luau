@@ -19,12 +19,8 @@ function Combat.Damage(Attacker : CoreUtils.HumanoidR15, Target : CoreUtils.Huma
 	StandName : string,
 	MoveInfo : {[any] : any}?,
 })
-	local MoveData = StandData[Data.StandName][Data.MoveName]
-	
-	if Data.MoveInfo then
-		MoveData = Data.MoveInfo
-	end
-	
+	local MoveData = Data.MoveInfo or StandData[Data.StandName][Data.MoveName]
+
 	local Humanoid = Target.Humanoid
 	local Attributes = Target:GetAttributes()
 	

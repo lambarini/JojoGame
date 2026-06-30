@@ -182,14 +182,16 @@ function Ability:M1()
 
 	local M1Animations = Animations.M1
 	local StandTracks : {[number] : AnimationTrack} = {}
-	local CharacterTracks : {[number] : AnimationTrack} = {}
 	local CurrentTrack : AnimationTrack? = nil
 
 	return {
 		[true] = function()
-			if not Combat.CanUseMove(self.AbilityManager.Character, {
-					RequiresStand = false,
-				}) then
+			if not self.Summoned then
+				self.AbilityManager.BaseMoves.M1[true]()
+				return
+			end
+
+			if not Combat.CanUseMove(self.AbilityManager.Character) then
 				return
 			end
 
@@ -202,7 +204,7 @@ function Ability:M1()
 					Sequence = 1
 				end
 			end
-			
+
 			if Sequence == #StandData.Tusk.M1 then
 				self.AbilityManager.PlayerObject:SetCooldown("M1", 2)
 			end
@@ -215,24 +217,13 @@ function Ability:M1()
 				UsingMove = true,
 			})
 
-			local Summoned = self.Summoned
-
-			if Summoned then
-				self.StandAttach.Position = Vector3.new(0, 0, -2)
-			end
+			self.StandAttach.Position = Vector3.new(0, 0, -2)
 
 			if CurrentTrack then
 				CurrentTrack:Stop(0.1)
 			end
 
-			local Animator = if Summoned
-				then self.Stand.AnimationController.Animator
-				else self.AbilityManager.Character.Humanoid:FindFirstChildOfClass("Animator")
-
-			local Folder = if Summoned then M1Animations.Stand else M1Animations.Character
-			local Cache = if Summoned then StandTracks else CharacterTracks
-
-			CurrentTrack = PlayM1Animation(Animator, Folder, Sequence, Cache)
+			CurrentTrack = PlayM1Animation(self.Stand.AnimationController.Animator, M1Animations.Stand, Sequence, StandTracks)
 
 			local Hitbox = HitboxModule.new({
 				Size = Vector3.new(4, 4, 5),
