@@ -36,7 +36,7 @@ return {
 		NailShot = {
 			Damage = 4,
 			StunTime = 0.3,
-			Speed = 200,
+			Speed = 100,
 			Range = 200,
 			Cooldown = 1.5,
 			Pierce = false,

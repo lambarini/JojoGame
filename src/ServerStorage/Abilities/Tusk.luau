@@ -120,7 +120,7 @@ function Ability:NailShot()
 				Range = Data.Range,
 				Character = self.AbilityManager.Character,
 				Pierce = Data.Pierce,
-				Visual = "Nail",
+				Visual = "TuskNail",
 				Callback = function(Enemy : CoreUtils.HumanoidR15)
 					Combat.Damage(self.AbilityManager.Character, Enemy, {
 						MoveName = "NailShot",

@@ -5,6 +5,10 @@
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+-- // FOLDERS \\ --
+local Shared = ReplicatedStorage.Shared
+local FXFolder = Shared.FX
+
 -- // MODULES \\ --
 local Packets = require(ReplicatedStorage.Packets)
 
@@ -25,21 +29,27 @@ local function Destroy(Id : number)
 end
 
 local function SpawnProjectile(Id : number, Origin : Vector3, Direction : Vector3, Speed : number, Range : number, Visual : string)
-	local Part = Instance.new("Part")
-	Part.Size = Vector3.new(0.3, 0.3, 1.6)
-	Part.Material = Enum.Material.Neon
-	Part.Color = Color3.fromRGB(225, 225, 225)
-	Part.Anchored = true
-	Part.CanCollide = false
-	Part.CanQuery = false
-	Part.CanTouch = false
-	Part.CFrame = CFrame.lookAt(Origin, Origin + Direction)
-	Part.Parent = workspace
+	local Part
+	
+	if Visual == "TuskNail" then
+		Part = FXFolder.Projectiles.Nail:Clone()
+		Part.CFrame = CFrame.lookAt(Origin, Origin + Direction)
+		Part.Parent = workspace.Projectiles
+	else
+		Part = Instance.new("Part")
+		Part.Size = Vector3.new(0.3, 0.3, 1.6)
+		Part.Material = Enum.Material.Neon
+		Part.Color = Color3.fromRGB(225, 225, 225)
+		Part.Anchored = true
+		Part.CanCollide = false
+		Part.CanQuery = false
+		Part.CanTouch = false
+		Part.CFrame = CFrame.lookAt(Origin, Origin + Direction)
+		Part.Parent = workspace.Projectiles
+	end
 
 	local Traveled = 0
-	local Connection : RBXScriptConnection = nil
-
-	Connection = RunService.RenderStepped:Connect(function(DeltaTime : number)
+	RunService:BindToRenderStep("UpdateProjectile_"..Id, Enum.RenderPriority.Camera.Value, function(DeltaTime)
 		local Step = Speed * DeltaTime
 		Traveled += Step
 
@@ -52,7 +62,6 @@ local function SpawnProjectile(Id : number, Origin : Vector3, Direction : Vector
 	end)
 
 	ActiveProjectiles[Id] = function()
-		Connection:Disconnect()
 		Part:Destroy()
 	end
 end
