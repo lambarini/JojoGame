@@ -21,10 +21,9 @@ local ReplicaServer = require(Modules.ReplicaServer)
 local ProfileStore = require(script.Parent.ProfileStore)
 
 -- // VARIABLES \\ --
-local PlayerStore = ProfileStore.New("PlayerStore", DataTemplate)
 local DataToken = ReplicaServer.Token("PlayerData")
 
-export type Profile = typeof(PlayerStore:StartSessionAsync("1", {}))
+export type Profile = typeof(ProfileStore.New("PlayerStore", DataTemplate):StartSessionAsync("1", {}))
 
 export type PlayerObject = typeof(setmetatable({} :: {
 	Player : Player,

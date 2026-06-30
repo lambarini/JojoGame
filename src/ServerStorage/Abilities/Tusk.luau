@@ -44,6 +44,33 @@ type Ability = typeof(setmetatable({} :: {
 	CanSummon : boolean,
 }, Ability))
 
+-- // FUNCTIONS \\ --
+
+local function PlayM1Animation(Animator : Animator?, Folder : Instance?, Index : number, Cache : {[number] : AnimationTrack}) : AnimationTrack?
+	if not Animator or not Folder then
+		return nil
+	end
+
+	local Track = Cache[Index]
+
+	if not Track then
+		local Animation = Folder:FindFirstChild(tostring(Index)) or Folder:FindFirstChildWhichIsA("Animation")
+
+		if not Animation or not Animation:IsA("Animation") then
+			return nil
+		end
+		
+		Cache[Index] = Animator:LoadAnimation(Animation)
+		Cache[Index].Priority = Enum.AnimationPriority.Action
+		
+		Track = Cache[Index]
+	end
+
+	Track:Play(0.1)
+
+	return Track
+end
+
 function Ability.new(Player : Player) : Ability
 	local self = setmetatable({}, table.clone(Ability)) :: Ability
 	
@@ -152,13 +179,20 @@ end
 function Ability:M1()
 	local Last = os.clock()
 	local Sequence = 0
-	
+
+	local M1Animations = Animations.M1
+	local StandTracks : {[number] : AnimationTrack} = {}
+	local CharacterTracks : {[number] : AnimationTrack} = {}
+	local CurrentTrack : AnimationTrack? = nil
+
 	return {
 		[true] = function()
-			if not Combat.CanUseMove(self.AbilityManager.Character) then
+			if not Combat.CanUseMove(self.AbilityManager.Character, {
+					RequiresStand = false,
+				}) then
 				return
 			end
-			
+
 			if os.clock() - Last >= 0.9 then
 				Sequence = 1
 			else
@@ -170,14 +204,31 @@ function Ability:M1()
 			end
 
 			Last = os.clock()
-			
+
 			local Trove = self.AbilityManager._trove:Add(TroveModule.new())
 
 			CoreUtils.Common:SetAttributes(self.AbilityManager.Character, {
 				UsingMove = true,
 			})
-			
-			self.StandAttach.Position = Vector3.new(0, 0, -2)
+
+			local Summoned = self.Summoned
+
+			if Summoned then
+				self.StandAttach.Position = Vector3.new(0, 0, -2)
+			end
+
+			if CurrentTrack then
+				CurrentTrack:Stop(0.1)
+			end
+
+			local Animator = if Summoned
+				then self.Stand.AnimationController.Animator
+				else self.AbilityManager.Character.Humanoid:FindFirstChildOfClass("Animator")
+
+			local Folder = if Summoned then M1Animations.Stand else M1Animations.Character
+			local Cache = if Summoned then StandTracks else CharacterTracks
+
+			CurrentTrack = PlayM1Animation(Animator, Folder, Sequence, Cache)
 
 			local Hitbox = HitboxModule.new({
 				Size = Vector3.new(4, 4, 5),
@@ -213,7 +264,7 @@ function Ability:M1()
 					end
 					
 					if not self.AbilityManager.Character:GetAttribute("UsingMove") then
-						self.StandAttach.Position = StandOutPos
+						self.StandAttach.Position = if self.Summoned then StandOutPos else Vector3.zero
 					end
 				end)
 			end)

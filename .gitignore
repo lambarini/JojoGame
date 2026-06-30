@@ -1,0 +1,13 @@
+# Argon / Rojo
+sourcemap.json
+*.rbxl
+*.rbxlx
+*.rbxl.lock
+*.rbxlx.lock
+*.rbxm
+*.rbxmx
+
+# Editor
+.DS_Store
+Thumbs.db
+CLAUDE.md

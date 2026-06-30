@@ -21,8 +21,6 @@ function GetCharacterSpeed() : number
 		WalkSpeed = 3
 	end
 	
-	print(WalkSpeed)
-	
 	return WalkSpeed
 end
 
