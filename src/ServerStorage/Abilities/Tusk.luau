@@ -38,9 +38,10 @@ local StandPoses = {
 	Attacking = Vector3.new(0, 0, -2),
 	StandOut = Vector3.new(-3.5, 1.5, 1.5),
 	Hidden = Vector3.zero,
+	Center = Vector3.zero,
 }
 
-type StandPose = "Attacking" | "StandOut" | "Hidden" | "Idle"
+type StandPose = "Attacking" | "StandOut" | "Hidden" | "Center" | "Idle"
 
 type Ability = typeof(setmetatable({} :: {
 	AbilityManager : AbilityManager.AbilityManager,
@@ -71,6 +72,7 @@ function Ability.new(Player : Player) : Ability
 		Barrage = self:Barrage(),
 		M1 = self:M1(),
 		NailShot = self:NailShot(),
+		Beatdown = self:Beatdown(),
 	}
 
 	self:SetStandPosition("Idle")
@@ -315,6 +317,8 @@ function Ability:M1()
 				M1Animations.Stand, 
 				Sequence
 			)
+			
+			Packets.PlaySound:Fire("Swing", self.AbilityManager.Character.HumanoidRootPart)
 
 			local Hitbox = HitboxModule.new({
 				Size = Vector3.new(4, 4, 5),
@@ -414,7 +418,6 @@ function Ability:Barrage()
 				end,
 			})
 
-			--local Sound = Util:PlaySound(HumanoidRootPart, Sounds.BarrageWoosh, false)
 			--local BarrageAnim : AnimationTrack = plrInfo.StandAnimator:LoadAnimation(SAnims.Barrage)
 			--BarrageAnim.Priority = Enum.AnimationPriority.Action
 			--BarrageAnim:Play()
@@ -436,7 +439,6 @@ function Ability:Barrage()
 					
 					Packets.VFXEvent:Fire("BarrageEffect", {self.AbilityManager.Character, false})
 
-					--Sound:Destroy()
 					--BarrageAnim:Stop()
 					return
 				end
@@ -470,6 +472,243 @@ function Ability:Barrage()
 			end
 		end,
 	}
+end
+
+function Ability:Beatdown()
+	return {
+		[true] = function()
+			local Character = self.AbilityManager.Character
+
+			if not Combat.CanUseMove(Character, {
+				RequiresStand = true
+				}) then
+				return
+			end
+
+			local Data = StandData.Tusk.Beatdown
+
+			Common:SetAttributes(Character, {
+				UsingMove = true,
+			})
+
+			self:SetStandPosition("Attacking")
+
+			local Grabbed = false
+			local Hitbox = HitboxModule.new({
+				Size = Data.HitboxSize,
+				Offset = Data.HitboxOffset,
+				TargetPart = Character.HumanoidRootPart,
+				Lingering = true,
+				HitOnce = true,
+				Character = Character,
+				Callback = function(Enemy : CoreUtils.HumanoidR15)
+					if Grabbed then
+						return
+					end
+
+					if Enemy:GetAttribute("InBeatdown") or Enemy:GetAttribute("Invincible") then
+						return
+					end
+
+					local EnemyHumanoid = Enemy:FindFirstChildOfClass("Humanoid")
+
+					if not EnemyHumanoid or EnemyHumanoid.Health <= 0 then
+						return
+					end
+
+					Grabbed = true
+
+					task.spawn(function()
+						self:RunBeatdown(Enemy, Data)
+					end)
+				end,
+			})
+
+			self.AbilityManager._trove:Add(Hitbox :: any)
+
+			task.delay(Data.HitboxDuration, function()
+				Hitbox:Destroy()
+				
+				if Grabbed then
+					return
+				end
+
+				self.AbilityManager.PlayerObject:SetCooldown("Beatdown", Data.WhiffCooldown)
+
+				Common:SetAttributes(Character, {
+					UsingMove = false,
+				})
+
+				self:SetStandPosition("Idle", 0.15)
+			end)
+		end,
+		[false] = function()
+
+		end,
+	}
+end
+
+function Ability:RunBeatdown(Enemy : CoreUtils.HumanoidR15, Data : typeof(StandData.Tusk.Beatdown))
+	local Character = self.AbilityManager.Character
+	local HumanoidRootPart = Character.HumanoidRootPart
+	local Humanoid = Character.Humanoid
+	local EnemyRootPart = Enemy.HumanoidRootPart
+	local EnemyHumanoid = Enemy.Humanoid
+
+	self.AbilityManager.PlayerObject:SetCooldown("Beatdown", Data.Cooldown)
+
+	local Trove = self.AbilityManager._trove:Add(TroveModule.new())
+	local Active = true
+	local StunEnd = os.clock() + Data.Duration + 0.5
+
+	Common:SetAttributes(Character, {
+		InBeatdown = true,
+	})
+
+	Common:SetAttributes(Enemy, {
+		InBeatdown = true,
+		Stun = StunEnd,
+	})
+
+	self:SetStandPosition("Center")
+
+	EnemyRootPart.CFrame = HumanoidRootPart.CFrame
+
+	local AnchorPart = Trove:Add(Instance.new("Part"))
+	AnchorPart.Name = "BeatdownAnchor"
+	AnchorPart.Anchored = true
+	AnchorPart.CanCollide = false
+	AnchorPart.CanQuery = false
+	AnchorPart.CanTouch = false
+	AnchorPart.Transparency = 1
+	AnchorPart.Size = Vector3.one
+	AnchorPart.CFrame = HumanoidRootPart.CFrame
+	AnchorPart.Parent = workspace.Debris
+
+	local AnchorAttachment = Instance.new("Attachment")
+	AnchorAttachment.Parent = AnchorPart
+
+	local function Pin(RootPart : BasePart)
+		local PinAttachment = Trove:Add(Instance.new("Attachment"))
+		PinAttachment.Name = "BeatdownPin"
+		PinAttachment.Parent = RootPart
+
+		local AlignPosition = Trove:Add(Instance.new("AlignPosition"))
+		AlignPosition.Attachment0 = PinAttachment
+		AlignPosition.Attachment1 = AnchorAttachment
+		AlignPosition.RigidityEnabled = true
+		AlignPosition.MaxForce = math.huge
+		AlignPosition.MaxVelocity = math.huge
+		AlignPosition.MaxAxesForce = Vector3.one * math.huge
+		AlignPosition.Responsiveness = 100
+		AlignPosition.Parent = RootPart
+
+		local AlignOrientation = Trove:Add(Instance.new("AlignOrientation"))
+		AlignOrientation.Attachment0 = PinAttachment
+		AlignOrientation.Attachment1 = AnchorAttachment
+		AlignOrientation.RigidityEnabled = true
+		AlignOrientation.MaxTorque = math.huge
+		AlignOrientation.Responsiveness = 100
+		AlignOrientation.MaxAngularVelocity = math.huge
+		AlignOrientation.Parent = RootPart
+	end
+
+	Pin(HumanoidRootPart)
+	Pin(EnemyRootPart)
+
+	local UserTrack = Common.PlayAnimation(
+		Humanoid:FindFirstChildOfClass("Animator"),
+		Animations,
+		"BeatdownPlayer",
+		nil,
+		Enum.AnimationPriority.Action4
+	)
+
+	local StandTrack = Common.PlayAnimation(
+		self.Stand.AnimationController.Animator,
+		Animations,
+		"BeatdownStand",
+		nil,
+		Enum.AnimationPriority.Action4
+	)
+
+	local VictimTrack = Common.PlayAnimation(
+		EnemyHumanoid:FindFirstChildOfClass("Animator"),
+		Animations,
+		"BeatdownVictim",
+		nil,
+		Enum.AnimationPriority.Action4
+	)
+
+	local EnemyPlayer = PlayersService:GetPlayerFromCharacter(Enemy)
+
+	if EnemyPlayer then
+		Packets.VFXEvent:FireClient(EnemyPlayer, "BeatdownCutscene", {Character, "TuskBeatdown", true})
+	end
+
+	Packets.VFXEvent:FireClient(self.AbilityManager.Player, "BeatdownCutscene", {Character, "TuskBeatdown", true})
+
+	Trove:Add(function()
+		Active = false
+
+		Character:SetAttribute("InBeatdown", false)
+		Enemy:SetAttribute("InBeatdown", false)
+
+		if Enemy:GetAttribute("Stun") == StunEnd then
+			Enemy:SetAttribute("Stun", false)
+		end
+
+		if UserTrack then
+			UserTrack:Stop()
+		end
+
+		if StandTrack then
+			StandTrack:Stop()
+		end
+
+		if VictimTrack then
+			VictimTrack:Stop()
+		end
+
+		Common:SetAttributes(Character, {
+			UsingMove = false,
+		})
+
+		if EnemyPlayer then
+			Packets.VFXEvent:FireClient(EnemyPlayer, "BeatdownCutscene", {Character, "TuskBeatdown", false})
+		end
+		
+		if self.AbilityManager.Player then
+			Packets.VFXEvent:FireClient(self.AbilityManager.Player, "BeatdownCutscene", {Character, "TuskBeatdown", false})
+		end
+
+		self:SetStandPosition("Idle", 0.15)
+	end)
+
+	Trove:Connect(EnemyHumanoid.Died, function()
+		Trove:Destroy()
+	end)
+
+	Trove:Connect(Enemy.AncestryChanged, function()
+		if not Enemy.Parent then
+			Trove:Destroy()
+		end
+	end)
+
+	task.delay(Data.Duration, function()
+		if not Active then
+			return
+		end
+
+		Combat.Damage(Character, Enemy, {
+			MoveName = "Beatdown",
+			StandName = StandName,
+			MoveInfo = Data,
+		})
+
+		Trove:Destroy()
+		Enemy:PivotTo(HumanoidRootPart.CFrame * CFrame.new(Data.KnockbackOffset))
+	end)
 end
 
 return Ability

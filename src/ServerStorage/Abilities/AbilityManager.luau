@@ -21,6 +21,7 @@ local DataHandler = require(Modules.DataHandler)
 local HitboxModule = require(Modules.Hitbox)
 local Combat = require(Modules.Combat)
 local Common = require(SharedModules.Common)
+local Packets = require(ReplicatedStorage.Packets)
 local StandData = require(SharedData.StandData)
 
 export type InputInfo = {
@@ -159,6 +160,8 @@ function AbilityManager.BaseM1(self : AbilityManager) : Dispatch
 			end
 
 			CurrentTrack = PlayAnimation(Character.Humanoid:FindFirstChildOfClass("Animator"), Animations.M1, Sequence, Tracks)
+
+			Packets.PlaySound:Fire("Swing", self.Character.HumanoidRootPart)
 
 			task.delay(MoveData.StartUp, function()
 				if Cancelled then

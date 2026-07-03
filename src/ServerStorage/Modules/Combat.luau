@@ -6,12 +6,17 @@ local ServerStorage = game:GetService("ServerStorage")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- // FOLDERS \\ --
+local Shared = ReplicatedStorage.Shared
+local SharedModules = Shared.Modules
+local Animations = Shared.Animations
+
 local Data = ReplicatedStorage.Shared.Data
 local Modules = ServerStorage.Modules
 
 -- // MODULES \\ --
 local StandData = require(Data.StandData)
 local Packets = require(ReplicatedStorage.Packets)
+local Common = require(SharedModules.Common)
 local CoreUtils = require(Modules.CoreUtils)
 
 function Combat.Damage(Attacker : CoreUtils.HumanoidR15, Target : CoreUtils.HumanoidR15, Data : {
@@ -46,6 +51,12 @@ function Combat.Damage(Attacker : CoreUtils.HumanoidR15, Target : CoreUtils.Huma
 		Damage = Damage,
 		Character = Target,
 	})
+	
+	Common.PlayAnimation(
+		Target.Humanoid:FindFirstChild("Animator") :: Animator,
+		Animations,
+		`Hit{math.random(1, 3)}`
+	)
 end
 
 function Combat.IsStunned(Target : CoreUtils.HumanoidR15) : boolean

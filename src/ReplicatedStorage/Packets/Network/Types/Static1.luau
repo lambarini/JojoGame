@@ -16,4 +16,6 @@ for _, Sound in SFX:GetChildren() do
 	end
 end
 
+table.sort(StaticTable)
+
 return StaticTable

@@ -41,12 +41,23 @@ return {
 			Cooldown = 1.5,
 			Pierce = false,
 		},
+		Beatdown = {
+			Damage = 35,
+			StunTime = 2,
+			Duration = 8.72,
+			Cooldown = 30,
+			WhiffCooldown = 2,
+			HitboxSize = Vector3.new(4, 4, 8),
+			HitboxOffset = Vector3.new(0, 0, -4),
+			HitboxDuration = 0.35,
+			KnockbackOffset = Vector3.new(0, 5, -20),
+		},
 	},
 	Standless = {
 		M1 = {
 			[1] = {
 				StartUp = 0.22,
-				HitboxDuration = 0.2,
+				HitboxDuration = 0.15,
 				Endlag = .15,
 				Damage = 5,
 				StunTime = 0.4,
@@ -57,7 +68,7 @@ return {
 			},
 			[2] = {
 				StartUp = 0.23,
-				HitboxDuration = 0.2,
+				HitboxDuration = 0.15,
 				Endlag = .15,
 				Damage = 5,
 				StunTime = 0.4,
@@ -68,7 +79,7 @@ return {
 			},
 			[3] = {
 				StartUp = 0.2,
-				HitboxDuration = 0.15,
+				HitboxDuration = 0.1,
 				Endlag = .15,
 				Damage = 5,
 				StunTime = 0.4,
@@ -79,7 +90,7 @@ return {
 			},
 			[4] = {
 				StartUp = 0.2,
-				HitboxDuration = 0.2,
+				HitboxDuration = 0.15,
 				Endlag = .15,
 				Damage = 5,
 				StunTime = 0.4,
@@ -90,7 +101,7 @@ return {
 			},
 			[5] = {
 				StartUp = 0.22,
-				HitboxDuration = 0.2,
+				HitboxDuration = 0.15,
 				Endlag = 0.2,
 				Damage = 10,
 				StunTime = 0.4,
