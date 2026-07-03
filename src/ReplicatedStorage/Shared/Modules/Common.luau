@@ -70,4 +70,66 @@ function Common.Weld(Target : BasePart, Anchor : BasePart)
 	WeldConstraint.Parent = Anchor
 end
 
+local AnimationCache = {}
+
+function Common.PlayAnimation(
+	Animator: Animator?,
+	AnimationInstance: Instance?,
+	Identifier: any,
+	FadeTime: number?,
+	Priority: Enum.AnimationPriority?
+): AnimationTrack?
+	if not Animator or not AnimationInstance then
+		return nil
+	end
+
+	if not AnimationCache[Animator] then
+		AnimationCache[Animator] = {}
+
+		Animator.Destroying:Connect(function()
+			AnimationCache[Animator] = nil
+		end)
+	end
+
+	local LocalCache = AnimationCache[Animator]
+	local Track = LocalCache[Identifier]
+
+	if not Track then
+		local TargetAnimation: Animation? = nil
+
+		if AnimationInstance:IsA("Animation") then
+			TargetAnimation = AnimationInstance
+		else
+			local Found = AnimationInstance:FindFirstChild(tostring(Identifier)) 
+				or AnimationInstance:FindFirstChildWhichIsA("Animation")
+
+			if Found and Found:IsA("Animation") then
+				TargetAnimation = Found
+			end
+		end
+
+		if not TargetAnimation then
+			return nil
+		end
+
+		Track = Animator:LoadAnimation(TargetAnimation)
+		if Track then
+			Track.Priority = Priority or Enum.AnimationPriority.Action
+			LocalCache[Identifier] = Track
+		end
+	end
+
+	if Track then
+		Track:Play(FadeTime or 0.1)
+	end
+
+	return Track
+end
+
+function Common:SetAttributes(Instance : Instance, Attributes : {[string] : any})
+	for Name, Value in Attributes do
+		Instance:SetAttribute(Name, Value)
+	end
+end
+
 return Common

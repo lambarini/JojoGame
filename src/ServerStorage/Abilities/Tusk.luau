@@ -27,6 +27,7 @@ local Combat = require(Modules.Combat)
 local SignalModule = require(SharedModules.Signal)
 local Packets = require(ReplicatedStorage.Packets)
 local DataHandler = require(Modules.DataHandler)
+local Common = require(SharedModules.Common)
 local StandData = require(SharedData.StandData)
 local AbilityManager = require(ServerStorage.Abilities.AbilityManager)
 
@@ -113,24 +114,38 @@ function Ability:NailShot()
 
 			self.AbilityManager.PlayerObject:SetCooldown("NailShot", Data.Cooldown)
 			
-			self.StandAttach.Position = StandOutPos
-
-			ProjectileModule.new({
-				Origin = Origin,
-				Direction = Offset.Unit,
-				Speed = Data.Speed,
-				Range = Data.Range,
-				Character = self.AbilityManager.Character,
-				Pierce = Data.Pierce,
-				Visual = "TuskNail",
-				Callback = function(Enemy : CoreUtils.HumanoidR15)
-					Combat.Damage(self.AbilityManager.Character, Enemy, {
-						MoveName = "NailShot",
-						StandName = StandName,
-						MoveInfo = Data,
-					})
-				end,
-			})
+			Common.PlayAnimation(
+				self.Stand.AnimationController.Animator, 
+				Animations,
+				"NailShot",
+				nil,
+				Enum.AnimationPriority.Action
+			)
+			
+			self.StandAttach.Position = Vector3.new(0, 0, -2)
+			
+			task.delay(36 / 60, function()
+				ProjectileModule.new({
+					Origin = Origin,
+					Direction = Offset.Unit,
+					Speed = Data.Speed,
+					Range = Data.Range,
+					Character = self.AbilityManager.Character,
+					Pierce = Data.Pierce,
+					Visual = "TuskNail",
+					Callback = function(Enemy : CoreUtils.HumanoidR15)
+						Combat.Damage(self.AbilityManager.Character, Enemy, {
+							MoveName = "NailShot",
+							StandName = StandName,
+							MoveInfo = Data,
+						})
+					end,
+				})
+				
+				task.wait(18 / 60)
+				
+				self.StandAttach.Position = StandOutPos
+			end)
 		end,
 		[false] = function()
 
@@ -228,7 +243,6 @@ function Ability:M1()
 	local Sequence = 0
 
 	local M1Animations = Animations.M1
-	local StandTracks : {[number] : AnimationTrack} = {}
 	local CurrentTrack : AnimationTrack? = nil
 
 	return {
@@ -260,7 +274,7 @@ function Ability:M1()
 
 			local Trove = self.AbilityManager._trove:Add(TroveModule.new())
 
-			CoreUtils.Common:SetAttributes(self.AbilityManager.Character, {
+			Common:SetAttributes(self.AbilityManager.Character, {
 				UsingMove = true,
 			})
 
@@ -270,7 +284,11 @@ function Ability:M1()
 				CurrentTrack:Stop(0.1)
 			end
 
-			CurrentTrack = PlayM1Animation(self.Stand.AnimationController.Animator, M1Animations.Stand, Sequence, StandTracks)
+			CurrentTrack = Common.PlayAnimation(
+				self.Stand.AnimationController.Animator, 
+				M1Animations.Stand, 
+				Sequence
+			)
 
 			local Hitbox = HitboxModule.new({
 				Size = Vector3.new(4, 4, 5),
@@ -291,7 +309,7 @@ function Ability:M1()
 			Trove:Add(Hitbox :: any)
 			
 			Trove:Add(function()
-				CoreUtils.Common:SetAttributes(self.AbilityManager.Character, {
+				Common:SetAttributes(self.AbilityManager.Character, {
 					UsingMove = false,
 					Endlag = true,
 				})
@@ -339,7 +357,7 @@ function Ability:Barrage()
 			local BarrageActive = true
 			local BarrageTrove = self.AbilityManager._trove:Add(TroveModule.new())
 
-			CoreUtils.Common:SetAttributes(self.AbilityManager.Character, {
+			Common:SetAttributes(self.AbilityManager.Character, {
 				Barraging = true,
 				UsingMove = true,
 			})
@@ -387,7 +405,7 @@ function Ability:Barrage()
 
 					self.StandAttach.Position = StandOutPos
 
-					CoreUtils.Common:SetAttributes(self.AbilityManager.Character, {
+					Common:SetAttributes(self.AbilityManager.Character, {
 						Barraging = false,
 						UsingMove = false,
 					})

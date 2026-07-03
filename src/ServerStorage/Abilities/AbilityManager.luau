@@ -20,6 +20,7 @@ local CoreUtils = require(Modules.CoreUtils)
 local DataHandler = require(Modules.DataHandler)
 local HitboxModule = require(Modules.Hitbox)
 local Combat = require(Modules.Combat)
+local Common = require(SharedModules.Common)
 local StandData = require(SharedData.StandData)
 
 export type InputInfo = {
@@ -135,7 +136,7 @@ function AbilityManager.BaseM1(self : AbilityManager) : Dispatch
 			Trove:Add(function()
 				Cancelled = true
 
-				CoreUtils.Common:SetAttributes(Character, {
+				Common:SetAttributes(Character, {
 					UsingMove = false,
 					Endlag = true,
 				})
@@ -149,7 +150,7 @@ function AbilityManager.BaseM1(self : AbilityManager) : Dispatch
 				end)
 			end)
 
-			CoreUtils.Common:SetAttributes(Character, {
+			Common:SetAttributes(Character, {
 				UsingMove = true,
 			})
 
