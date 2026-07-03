@@ -79,15 +79,18 @@ local function SetupStand(Stand : Common.HumanoidR15)
 		end
 	end
 	
-	local LastSummon = nil
+	local LastSummon = Character:GetAttribute("Summoned") == true
 
 	local function PlaySummonSound()
-		if LastSummon == nil then
-			LastSummon = Character:GetAttribute("Summoned")
+		local Summoned = Character:GetAttribute("Summoned") == true
+
+		if Summoned == LastSummon then
 			return
 		end
-		
-		if Character:GetAttribute("Summoned") then
+
+		LastSummon = Summoned
+
+		if Summoned then
 			Common.PlaySoundAt(Stand.HumanoidRootPart, SFX.StandSummon)
 			
 			local StandSound = SFX:FindFirstChild(StandName):FindFirstChild("Summon")
@@ -114,7 +117,7 @@ local function SetupStand(Stand : Common.HumanoidR15)
 			Summoned = false
 		end
 		
-		if Character:GetAttribute("LastSummoned") ~= true and Summoned == true then
+		if Character:GetAttribute("LastSummon") ~= true and Summoned == true then
 			local SummonVFX = ParticleFolder.Summon:Clone()
 			SummonVFX.Parent = Stand:WaitForChild("HumanoidRootPart")
 			

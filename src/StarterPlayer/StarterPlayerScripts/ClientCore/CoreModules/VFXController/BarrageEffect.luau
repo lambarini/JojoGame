@@ -4,12 +4,14 @@
 -- // SERVICES \\ --
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
 
 -- // FOLDERS \\ --
 local Shared = ReplicatedStorage.Shared
 local Modules = Shared.Modules
 local FXFolder = Shared.FX
 local BarrageArms = FXFolder.BarrageArms
+local SFX = SoundService.SFX
 
 -- // MODULES \\ --
 local TroveModule = require(Modules.Trove)
@@ -40,6 +42,10 @@ return {
 		local HumanoidRootPart = Character.HumanoidRootPart
 		local BarrageEffect = FXFolder.BarrageEffect:Clone()
 		BarrageEffect.Parent = workspace.Debris
+
+		local BarrageSound = SFX.Barrage:Clone()
+		BarrageSound.Parent = HumanoidRootPart
+		BarrageSound:Play()
 
 		local function SpawnArm()
 			local Duration = Rand:NextNumber(0.3, 0.5)
@@ -92,6 +98,7 @@ return {
 			SpawnArm()
 		end
 
+		BarrageSound:Destroy()
 		BarrageEffect:Destroy()
 	end
 }
