@@ -71,7 +71,7 @@ end
 function Projectile.Start(self : Projectile)
 	self:CreateProjectile()
 	
-	self._trove:BindToRenderStep(`UpdateProjectile`..self.Id, Enum.RenderPriority.Camera.Value, function()
+	RunService:BindToRenderStep(`UpdateProjectile`..self.Id, Enum.RenderPriority.Camera.Value, function()
 		local Distance = (os.clock() - self.StartTime) * self.Speed
 		
 		if Distance >= self.Range then
@@ -89,6 +89,8 @@ function Projectile.Stop(self : Projectile)
 			Particle.Enabled = false
 		end
 	end
+	
+	RunService:UnbindFromRenderStep(`UpdateProjectile`..self.Id)
 	
 	task.delay(1, function()
 		self:Cleanup()
