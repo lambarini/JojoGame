@@ -34,7 +34,13 @@ local AbilityManager = require(ServerStorage.Abilities.AbilityManager)
 -- // VARIABLES \\ --
 
 local StandName = script.Name
-local StandOutPos = Vector3.new(-3.5, 1.5, 1.5)
+local StandPoses = {
+	Attacking = Vector3.new(0, 0, -2),
+	StandOut = Vector3.new(-3.5, 1.5, 1.5),
+	Hidden = Vector3.zero,
+}
+
+type StandPose = "Attacking" | "StandOut" | "Hidden" | "Idle"
 
 type Ability = typeof(setmetatable({} :: {
 	AbilityManager : AbilityManager.AbilityManager,
@@ -44,40 +50,22 @@ type Ability = typeof(setmetatable({} :: {
 	Summoned : boolean,
 	BarrageCancelEvent : SignalModule.Signal<>,
 	CanSummon : boolean,
+	_poseToken : number,
+
+	StandIdle : AnimationTrack,
 }, Ability))
 
 -- // FUNCTIONS \\ --
-
-local function PlayM1Animation(Animator : Animator?, Folder : Instance?, Index : number, Cache : {[number] : AnimationTrack}) : AnimationTrack?
-	if not Animator or not Folder then
-		return nil
-	end
-
-	local Track = Cache[Index]
-
-	if not Track then
-		local Animation = Folder:FindFirstChild(tostring(Index)) or Folder:FindFirstChildWhichIsA("Animation")
-
-		if not Animation or not Animation:IsA("Animation") then
-			return nil
-		end
-		
-		Cache[Index] = Animator:LoadAnimation(Animation)
-		Cache[Index].Priority = Enum.AnimationPriority.Action
-		
-		Track = Cache[Index]
-	end
-
-	Track:Play(0.1)
-
-	return Track
-end
 
 function Ability.new(Player : Player) : Ability
 	local self = setmetatable({}, table.clone(Ability)) :: Ability
 	
 	self.AbilityManager = AbilityManager.new(Player)
-	
+
+	self.CanSummon = true
+	self.Summoned = false
+	self._poseToken = 0
+
 	self.Moves = {
 		Summon = self:Summon(),
 		Barrage = self:Barrage(),
@@ -85,13 +73,47 @@ function Ability.new(Player : Player) : Ability
 		NailShot = self:NailShot(),
 	}
 
-	self.CanSummon = true
-	self.Summoned = false
+	self:SetStandPosition("Idle")
 
 	self.AbilityManager.Character:SetAttribute("Summoned", false)
 	self.AbilityManager.Character.Parent = workspace.Living
 
 	return self
+end
+
+function Ability:SetStandPosition(Pose : StandPose, Buffer : number?)
+	self._poseToken += 1
+	local Token = self._poseToken
+
+	local function Apply()
+		if not self.StandAttach.Parent then
+			return
+		end
+
+		if Pose == "Idle" then
+			self.StandAttach.Position = if self.Summoned then StandPoses.StandOut else StandPoses.Hidden
+			return
+		end
+
+		self.StandAttach.Position = StandPoses[Pose]
+	end
+
+	if not Buffer then
+		Apply()
+		return
+	end
+
+	task.delay(Buffer, function()
+		if Token ~= self._poseToken then
+			return
+		end
+
+		if self.AbilityManager.Character:GetAttribute("UsingMove") then
+			return
+		end
+
+		Apply()
+	end)
 end
 
 function Ability:NailShot()
@@ -103,15 +125,11 @@ function Ability:NailShot()
 				return
 			end
 
-			local Origin = self.Stand.HumanoidRootPart.Position
-			local Offset = Info.MousePos - Origin
-
-			if Offset.Magnitude == 0 then
-				return
-			end
-
 			local Data = StandData.Tusk.NailShot
-
+			
+			Common:SetAttributes(self.AbilityManager.Character, {
+				UsingMove = true,
+			})
 			self.AbilityManager.PlayerObject:SetCooldown("NailShot", Data.Cooldown)
 			
 			Common.PlayAnimation(
@@ -122,12 +140,14 @@ function Ability:NailShot()
 				Enum.AnimationPriority.Action
 			)
 			
-			self.StandAttach.Position = Vector3.new(0, 0, -2)
+			self:SetStandPosition("Attacking")
 			
 			task.delay(36 / 60, function()
+				Packets.VFXEvent:Fire("NailShotEffect", {self.AbilityManager.Character})
+
 				ProjectileModule.new({
-					Origin = Origin,
-					Direction = Offset.Unit,
+					Origin = self.Stand.RightHand.Position,
+					Direction = (Info.MousePos - self.Stand.RightHand.Position).Unit,
 					Speed = Data.Speed,
 					Range = Data.Range,
 					Character = self.AbilityManager.Character,
@@ -143,8 +163,12 @@ function Ability:NailShot()
 				})
 				
 				task.wait(18 / 60)
-				
-				self.StandAttach.Position = StandOutPos
+
+				Common:SetAttributes(self.AbilityManager.Character, {
+					UsingMove = false,
+				})
+
+				self:SetStandPosition("Idle", 0.15)
 			end)
 		end,
 		[false] = function()
@@ -164,8 +188,10 @@ function Ability:Summon()
 	self.Stand:PivotTo(self.AbilityManager.Character:GetPivot())
 	self.Stand.Parent = self.AbilityManager.Character
 
-	self.Stand.AnimationController.Animator:LoadAnimation(Animations.StandIdle):Play()
-
+	self.StandIdle = self.Stand.AnimationController.Animator:LoadAnimation(Animations.StandIdle)
+	self.StandIdle.Priority = Enum.AnimationPriority.Idle
+	self.StandIdle:Play()
+	
 	local AlignPosition = Instance.new("AlignPosition")
 	AlignPosition.Attachment1 = self.StandAttach
 	AlignPosition.Attachment0 = self.Stand.HumanoidRootPart.RootAttachment
@@ -198,8 +224,8 @@ function Ability:Summon()
 			end
 			
 			if self.Summoned then
-				self.StandAttach.Position = Vector3.zero
 				self.Summoned = false
+				self:SetStandPosition("Hidden")
 				self.CanSummon = false
 				
 				self.AbilityManager.Character:SetAttribute("Summoned", false)
@@ -218,8 +244,8 @@ function Ability:Summon()
 					return
 				end
 				
-				self.StandAttach.Position = Vector3.new(-3.5, 1.5, 1.5)
 				self.Summoned = true
+				self:SetStandPosition("StandOut")
 				self.CanSummon = false
 				
 				self.AbilityManager.Character:SetAttribute("Summoned", true)
@@ -278,7 +304,7 @@ function Ability:M1()
 				UsingMove = true,
 			})
 
-			self.StandAttach.Position = Vector3.new(0, 0, -2)
+			self:SetStandPosition("Attacking")
 
 			if CurrentTrack then
 				CurrentTrack:Stop(0.1)
@@ -317,14 +343,12 @@ function Ability:M1()
 				Hitbox:Destroy()
 				
 				local CurrentSequence = Sequence
-				
+
+				self:SetStandPosition("Idle", StandData.Tusk.M1[Sequence].Endlag)
+
 				task.delay(StandData.Tusk.M1[Sequence].Endlag, function()
 					if CurrentSequence == Sequence then
 						self.AbilityManager.Character:SetAttribute("Endlag", false)
-					end
-					
-					if not self.AbilityManager.Character:GetAttribute("UsingMove") then
-						self.StandAttach.Position = if self.Summoned then StandOutPos else Vector3.zero
 					end
 				end)
 			end)
@@ -364,8 +388,8 @@ function Ability:Barrage()
 
 			Packets.VFXEvent:Fire("BarrageEffect", {self.AbilityManager.Character, true})
 
-			self.StandAttach.Position = Vector3.new(0, 0, -2)
-			
+			self:SetStandPosition("Attacking")
+
 			local blacklist = {}
 
 			local Hitbox = HitboxModule.new({
@@ -403,12 +427,12 @@ function Ability:Barrage()
 
 					self.AbilityManager.PlayerObject:SetCooldown("Barrage", 7)
 
-					self.StandAttach.Position = StandOutPos
-
 					Common:SetAttributes(self.AbilityManager.Character, {
 						Barraging = false,
 						UsingMove = false,
 					})
+
+					self:SetStandPosition("Idle", 0.15)
 					
 					Packets.VFXEvent:Fire("BarrageEffect", {self.AbilityManager.Character, false})
 
