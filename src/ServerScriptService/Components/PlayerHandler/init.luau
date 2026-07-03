@@ -1,6 +1,6 @@
 --!strict
 --!optimize 2
--- // Copyright 2025 lambarini, All rights reserved. \\ --
+-- // Copyright 2026 lambarini, All rights reserved. \\ --
 
 local PlayerHandler = {}
 

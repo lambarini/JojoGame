@@ -1,6 +1,6 @@
 --!strict
 --!optimize 2
--- // Copyright 2025 lambarini, All rights reserved. \\ --
+-- // Copyright 2026 lambarini, All rights reserved. \\ --
 
 local Ability = {}
 Ability.__index = Ability
@@ -112,6 +112,8 @@ function Ability:NailShot()
 			local Data = StandData.Tusk.NailShot
 
 			self.AbilityManager.PlayerObject:SetCooldown("NailShot", Data.Cooldown)
+			
+			self.StandAttach.Position = StandOutPos
 
 			ProjectileModule.new({
 				Origin = Origin,
