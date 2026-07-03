@@ -3,54 +3,50 @@ local CharacterHandler = {}
 
 -- // SERVICES \\ --
 local PlayersService = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- // MODULES \\ --
+local Trove = require(ReplicatedStorage.Shared.Modules.Trove)
 
 -- // VARIABLES \\ --
 local Player = PlayersService.LocalPlayer
 local Character = Player.Character or Player.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid") :: Humanoid
+local CharacterTrove = Trove.new()
 
+-- // FUNCTIONS \\ --
 local function IsStunned() : boolean
 	return os.clock() < (Character:GetAttribute("Stun") or 0)
 end
 
-function GetCharacterSpeed() : number
-	local WalkSpeed = 16
+local function IsRestricted() : boolean
 	local Attributes = Character:GetAttributes()
-	
-	if Attributes.UsingMove or IsStunned() or Attributes.Endlag then
-		WalkSpeed = 3
-	end
-	
-	return WalkSpeed
+	return Attributes.UsingMove == true or Attributes.Endlag == true or IsStunned()
 end
 
-local function GetJumpPower() : number
-	local JumpPower = 50
-	local Attributes = Character:GetAttributes()
+local function UpdateMovement()
+	local Restricted = IsRestricted()
 
-	if Attributes.UsingMove then
-		JumpPower = 0
-	end
-	
-	if IsStunned() then
-		JumpPower = 0
-	end
-	
-	if Attributes.Endlag then
-		JumpPower = 0
+	local WalkSpeed = if Restricted then 3 else 16
+	local JumpPower = if Restricted then 0 else 50
+
+	if Humanoid.WalkSpeed ~= WalkSpeed then
+		Humanoid.WalkSpeed = WalkSpeed
 	end
 
-	return JumpPower
+	if Humanoid.JumpPower ~= JumpPower then
+		Humanoid.JumpPower = JumpPower
+	end
 end
 
 local function CharacterAdded(Char : Model)
+	CharacterTrove:Clean()
+
 	Character = Char
-	Humanoid = Character:WaitForChild("Humanoid") :: Humanoid
-	
-	Character.AttributeChanged:Connect(function()
-		Humanoid.WalkSpeed = GetCharacterSpeed()
-		Humanoid.JumpPower = GetJumpPower()
-	end)
+	Humanoid = Char:WaitForChild("Humanoid") :: Humanoid
+
+	CharacterTrove:Connect(RunService.Heartbeat, UpdateMovement)
 end
 
 function CharacterHandler.init()
