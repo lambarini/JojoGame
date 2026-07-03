@@ -449,7 +449,7 @@ function Ability:Barrage()
 				end
 			end)
 
-			task.delay(8, function()
+			task.delay(7, function()
 				if BarrageActive then
 					self.BarrageCancelEvent:Fire()
 				end

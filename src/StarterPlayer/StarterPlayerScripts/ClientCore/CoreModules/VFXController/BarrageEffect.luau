@@ -43,7 +43,7 @@ return {
 		local BarrageEffect = FXFolder.BarrageEffect:Clone()
 		BarrageEffect.Parent = workspace.Debris
 
-		local BarrageSound = SFX.Barrage:Clone()
+		local BarrageSound = SFX.BarrageSFX:Clone()
 		BarrageSound.Parent = HumanoidRootPart
 		BarrageSound:Play()
 
