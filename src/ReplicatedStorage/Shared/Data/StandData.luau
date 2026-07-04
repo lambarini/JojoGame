@@ -45,7 +45,7 @@ return {
 			Damage = 35,
 			StunTime = 2,
 			Duration = 8.72,
-			Cooldown = 30,
+			Cooldown = 20,
 			WhiffCooldown = 2,
 			HitboxSize = Vector3.new(4, 4, 8),
 			HitboxOffset = Vector3.new(0, 0, -4),

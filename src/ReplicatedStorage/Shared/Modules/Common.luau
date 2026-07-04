@@ -4,7 +4,8 @@ local Common = {}
 export type HumanoidR15 = Model & {
 	HumanoidRootPart : BasePart & {
 		RootAttachment : Attachment,
-	}
+	},
+	Humanoid : Humanoid,
 }
 
 export type ParticleFolder = Folder & {

@@ -55,14 +55,16 @@ return {
 		local Track : AnimationTrack = Rig.Humanoid.Animator:LoadAnimation(Cutscene.Animation)
 
 		local HumanoidRootPart = Attacker.HumanoidRootPart
+		local Offset = CFrame.new(Vector3.new(0, -Attacker.Humanoid.HipHeight, 0))
 
 		Rig.RootPart.Anchored = true
-		Rig.RootPart.CFrame = HumanoidRootPart.CFrame * CFrame.new(0, -AttackerHumanoid.HipHeight, 0)
+		Rig.RootPart.CFrame = HumanoidRootPart.CFrame * Offset
 
 		Camera.CameraType = Enum.CameraType.Scriptable
 		Camera.FieldOfView = 25
 
 		RunService:BindToRenderStep("BeatdownCutscene", Enum.RenderPriority.Camera.Value, function()
+			Rig.RootPart.CFrame = HumanoidRootPart.CFrame * Offset 
 			Camera.CFrame = Rig.Torso.CFrame
 		end)
 
