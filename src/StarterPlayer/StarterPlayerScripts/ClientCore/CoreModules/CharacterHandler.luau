@@ -47,6 +47,12 @@ local function CharacterAdded(Char : Model)
 	Humanoid = Char:WaitForChild("Humanoid") :: Humanoid
 
 	CharacterTrove:Connect(RunService.Heartbeat, UpdateMovement)
+	
+	CharacterTrove:Connect(Character:GetAttributeChangedSignal("Ragdoll"), function()
+		local Ragdolled = Character:GetAttribute("Ragdoll") == true
+		
+		Humanoid:ChangeState(Enum.HumanoidStateType[Ragdolled and "Physics" or "GettingUp"])
+	end)
 end
 
 function CharacterHandler.init()

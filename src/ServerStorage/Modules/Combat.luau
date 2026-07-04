@@ -24,7 +24,7 @@ function Combat.Damage(Attacker : CoreUtils.HumanoidR15, Target : CoreUtils.Huma
 	StandName : string,
 	MoveInfo : {[any] : any}?,
 })
-	local MoveData = Data.MoveInfo or StandData[Data.StandName][Data.MoveName]
+	local MoveData : StandData.MoveData = Data.MoveInfo or StandData[Data.StandName][Data.MoveName]
 
 	local Humanoid = Target.Humanoid
 	local Attributes = Target:GetAttributes()
@@ -33,7 +33,7 @@ function Combat.Damage(Attacker : CoreUtils.HumanoidR15, Target : CoreUtils.Huma
 		return
 	end
 	
-	local StunTime = MoveData.StunTime
+	local StunTime = MoveData.StunTime or 0
 	local StunEnd = os.clock() + StunTime
 	Target:SetAttribute("Stun", StunEnd)
 	
@@ -45,7 +45,7 @@ function Combat.Damage(Attacker : CoreUtils.HumanoidR15, Target : CoreUtils.Huma
 	
 	local Damage = MoveData.Damage
 	
-	Humanoid.Health -= Damage
+	Humanoid.Health -= Damage or 0
 	
 	Packets.VFXEvent:Fire("HitEffect", {
 		Damage = Damage,
@@ -57,6 +57,10 @@ function Combat.Damage(Attacker : CoreUtils.HumanoidR15, Target : CoreUtils.Huma
 		Animations,
 		`Hit{math.random(1, 3)}`
 	)
+	
+	if MoveData.Ragdoll then
+		Common.Ragdoll(Target, MoveData.Ragdoll)
+	end
 end
 
 function Combat.IsStunned(Target : CoreUtils.HumanoidR15) : boolean

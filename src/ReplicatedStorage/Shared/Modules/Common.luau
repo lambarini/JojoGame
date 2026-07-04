@@ -133,4 +133,14 @@ function Common:SetAttributes(Instance : Instance, Attributes : {[string] : any}
 	end
 end
 
+function Common.Ragdoll(Character : HumanoidR15, Duration : number?)
+	Character:SetAttribute("Ragdoll", true)
+	
+	if Duration then
+		task.delay(Duration, function()
+			Character:SetAttribute("Ragdoll", false)
+		end)
+	end
+end
+
 return Common

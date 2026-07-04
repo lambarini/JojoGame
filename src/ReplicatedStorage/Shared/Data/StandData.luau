@@ -1,4 +1,13 @@
 --!strict
+export type MoveData = {
+	Damage : number?,
+	Duration : number?,
+	StunTime : number?,
+	Ragdoll : number?,
+	Endlag : number?,
+	
+}
+
 return {
 	Tusk = {
 		Barrage = {
