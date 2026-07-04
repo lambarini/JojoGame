@@ -5,6 +5,9 @@ export type MoveData = {
 	StunTime : number?,
 	Ragdoll : number?,
 	Endlag : number?,
+	Direction : Vector3?,
+	KnockbackForce : number?,
+	KnockbackDuration : number?,
 }
 
 return {
@@ -68,7 +71,7 @@ return {
 				HitboxSize = Vector3.one * 5,
 				HitboxOffset = Vector3.new(0, 0, -3),
 				KnockbackDuration = 0.1,
-				KnockbackForce = 10,
+				KnockbackForce = 15,
 				Ragdoll = 2,
 				Cooldown = 2,
 			},
@@ -148,7 +151,7 @@ return {
 				HitboxSize = Vector3.one * 5,
 				HitboxOffset = Vector3.new(0, 0, -3),
 				KnockbackDuration = 0.1,
-				KnockbackForce = 10,
+				KnockbackForce = 15,
 				Ragdoll = 2,
 				Cooldown = 2,
 			},

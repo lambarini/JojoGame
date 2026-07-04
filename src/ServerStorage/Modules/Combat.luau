@@ -61,6 +61,10 @@ function Combat.Damage(Attacker : CoreUtils.HumanoidR15, Target : CoreUtils.Huma
 	if MoveData.Ragdoll then
 		Common.Ragdoll(Target, MoveData.Ragdoll)
 	end
+	
+	local KnockbackDirection = MoveData.Direction or (Target.HumanoidRootPart.Position - Attacker.HumanoidRootPart.Position).Unit
+	
+	Combat:Knockback(Target, KnockbackDirection, MoveData.KnockbackForce or 1, MoveData.KnockbackDuration or 1, MoveData.Ragdoll ~= nil)
 end
 
 function Combat.IsStunned(Target : CoreUtils.HumanoidR15) : boolean
@@ -102,6 +106,21 @@ function Combat.CanUseMove(Target : CoreUtils.HumanoidR15, Params : MoveSettings
 	end
 	
 	return true
+end
+
+function Combat:Knockback(Character : CoreUtils.HumanoidR15, Direction : Vector3, Strength : number, Duration : number, Ragdoll : boolean)
+	if Ragdoll then
+		Direction = Direction + Vector3.new(0, 1, 0)
+	end
+	
+	local BodyVelocity = Instance.new("BodyVelocity")
+	BodyVelocity.MaxForce = Vector3.one * math.huge
+	BodyVelocity.Velocity = Direction * Strength
+	BodyVelocity.Parent = Ragdoll and Character:FindFirstChild("Head") or Character.HumanoidRootPart
+
+	task.delay(Duration, function()
+		BodyVelocity:Destroy()
+	end)
 end
 
 return Combat
