@@ -39,6 +39,9 @@ export type AbilityManager = typeof(setmetatable({} :: {
 	Moves : {[string] : Dispatch},
 	Destroying : SignalModule.Signal<>,
 	Summoned : boolean,
+	StandName : string,
+	StandM1Animations : Instance?,
+	SetStandPosition : ((Pose : string, Buffer : number?) -> ())?,
 }, AbilityManager))
 
 export type AbilityClass = {
@@ -77,6 +80,22 @@ local function PlayAnimation(Animator : Animator?, Folder : Instance?, Index : n
 	return Track
 end
 
+local function GetStandAnimator(Character : CoreUtils.HumanoidR15) : Animator?
+	local Stand = Character:FindFirstChild("Stand")
+
+	if not Stand then
+		return nil
+	end
+
+	local Controller = Stand:FindFirstChildOfClass("AnimationController")
+
+	if not Controller then
+		return nil
+	end
+
+	return Controller:FindFirstChildOfClass("Animator")
+end
+
 function AbilityManager.new(Player : Player) : AbilityManager
 	local self = setmetatable({}, AbilityManager) :: AbilityManager
 
@@ -85,6 +104,7 @@ function AbilityManager.new(Player : Player) : AbilityManager
 	self.Character = Player.Character or Player.CharacterAdded:Wait() :: any
 	self._trove = TroveModule.new()
 	self.Destroying = self._trove:Add(SignalModule.new())
+	self.StandName = "Standless"
 	self.BaseMoves = {
 		M1 = self:BaseM1(),
 	}
@@ -113,19 +133,23 @@ function AbilityManager.BaseM1(self : AbilityManager) : Dispatch
 				return
 			end
 
+			local Summoned = Character:GetAttribute("Summoned") == true
+			local StandName = if Summoned then self.StandName else "Standless"
+			local MoveList : typeof(StandData.Standless.M1) = (StandData :: any)[StandName].M1
+
 			if os.clock() - Last >= 0.9 then
 				Sequence = 1
 			else
 				Sequence += 1
 
-				if Sequence > #StandData.Standless.M1 then
+				if Sequence > #MoveList then
 					Sequence = 1
 				end
 			end
 
 			Last = os.clock()
 
-			local MoveData = StandData.Standless.M1[Sequence]
+			local MoveData = MoveList[Sequence]
 
 			if MoveData.Cooldown then
 				self.PlayerObject:SetCooldown("M1", MoveData.Cooldown)
@@ -142,6 +166,10 @@ function AbilityManager.BaseM1(self : AbilityManager) : Dispatch
 					Endlag = true,
 				})
 
+				if Summoned and self.SetStandPosition then
+					self.SetStandPosition("Idle", MoveData.Endlag)
+				end
+
 				local CurrentSequence = Sequence
 
 				task.delay(MoveData.Endlag, function()
@@ -155,11 +183,19 @@ function AbilityManager.BaseM1(self : AbilityManager) : Dispatch
 				UsingMove = true,
 			})
 
+			if Summoned and self.SetStandPosition then
+				self.SetStandPosition("Attacking")
+			end
+
 			if CurrentTrack then
 				CurrentTrack:Stop(0.1)
 			end
 
-			CurrentTrack = PlayAnimation(Character.Humanoid:FindFirstChildOfClass("Animator"), Animations.M1, Sequence, Tracks)
+			if Summoned then
+				CurrentTrack = Common.PlayAnimation(GetStandAnimator(Character), self.StandM1Animations, Sequence)
+			else
+				CurrentTrack = PlayAnimation(Character.Humanoid:FindFirstChildOfClass("Animator"), Animations.M1, Sequence, Tracks)
+			end
 
 			Packets.PlaySound:Fire("Swing", self.Character.HumanoidRootPart)
 
@@ -178,7 +214,7 @@ function AbilityManager.BaseM1(self : AbilityManager) : Dispatch
 					Callback = function(Enemy : CoreUtils.HumanoidR15)
 						Combat.Damage(Character, Enemy, {
 							MoveName = "M1",
-							StandName = "Standless",
+							StandName = StandName,
 							MoveInfo = MoveData,
 						})
 					end,

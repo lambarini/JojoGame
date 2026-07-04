@@ -62,6 +62,11 @@ function Ability.new(Player : Player) : Ability
 	local self = setmetatable({}, table.clone(Ability)) :: Ability
 	
 	self.AbilityManager = AbilityManager.new(Player)
+	self.AbilityManager.StandName = StandName
+	self.AbilityManager.StandM1Animations = Animations.M1.Character
+	self.AbilityManager.SetStandPosition = function(Pose : string, Buffer : number?)
+		self:SetStandPosition(Pose :: any, Buffer)
+	end
 
 	self.CanSummon = true
 	self.Summoned = false
@@ -70,7 +75,7 @@ function Ability.new(Player : Player) : Ability
 	self.Moves = {
 		Summon = self:Summon(),
 		Barrage = self:Barrage(),
-		M1 = self:M1(),
+		M1 = self.AbilityManager.BaseMoves.M1,
 		NailShot = self:NailShot(),
 		Beatdown = self:Beatdown(),
 	}
@@ -271,107 +276,6 @@ function Ability:Summon()
 				--plrInfo.UserIdle:Play(.5)
 			end 
 
-		end,
-		[false] = function()
-			
-		end,
-	}
-end
-
-function Ability:M1()
-	local Last = os.clock()
-	local Sequence = 0
-
-	local M1Animations = Animations.M1
-	local CurrentTrack : AnimationTrack? = nil
-
-	return {
-		[true] = function(InputInfo)
-			if not self.Summoned then
-				self.AbilityManager.BaseMoves.M1[true](InputInfo)
-				return
-			end
-
-			if not Combat.CanUseMove(self.AbilityManager.Character) then
-				return
-			end
-
-			if os.clock() - Last >= 0.9 then
-				Sequence = 1
-			else
-				Sequence += 1
-
-				if Sequence > #StandData.Tusk.M1 then
-					Sequence = 1
-				end
-			end
-
-			if Sequence == #StandData.Tusk.M1 then
-				self.AbilityManager.PlayerObject:SetCooldown("M1", 2)
-			end
-
-			Last = os.clock()
-
-			local Trove = self.AbilityManager._trove:Add(TroveModule.new())
-
-			Common:SetAttributes(self.AbilityManager.Character, {
-				UsingMove = true,
-			})
-
-			self:SetStandPosition("Attacking")
-
-			if CurrentTrack then
-				CurrentTrack:Stop(0.1)
-			end
-
-			CurrentTrack = Common.PlayAnimation(
-				self.Stand.AnimationController.Animator, 
-				M1Animations.Stand, 
-				Sequence
-			)
-			
-			Packets.PlaySound:Fire("Swing", self.AbilityManager.Character.HumanoidRootPart)
-
-			local Hitbox = HitboxModule.new({
-				Size = Vector3.new(4, 4, 5),
-				Offset = Vector3.new(0, 0, -2.5),
-				TargetPart = self.AbilityManager.Character.HumanoidRootPart,
-				Lingering = true,
-				HitOnce = true,
-				Character = self.AbilityManager.Character,
-				Callback = function(Enemy : CoreUtils.HumanoidR15)
-					Combat.Damage(self.AbilityManager.Character, Enemy, {
-						MoveName = "M1",
-						StandName = StandName,
-						MoveInfo = StandData.Tusk.M1[Sequence]
-					})
-				end,
-			})
-			
-			Trove:Add(Hitbox :: any)
-			
-			Trove:Add(function()
-				Common:SetAttributes(self.AbilityManager.Character, {
-					UsingMove = false,
-					Endlag = true,
-				})
-				
-				Hitbox:Destroy()
-				
-				local CurrentSequence = Sequence
-
-				self:SetStandPosition("Idle", StandData.Tusk.M1[Sequence].Endlag)
-
-				task.delay(StandData.Tusk.M1[Sequence].Endlag, function()
-					if CurrentSequence == Sequence then
-						self.AbilityManager.Character:SetAttribute("Endlag", false)
-					end
-				end)
-			end)
-			
-			task.delay(.35, function()
-				Trove:Destroy()
-			end)
 		end,
 		[false] = function()
 			
