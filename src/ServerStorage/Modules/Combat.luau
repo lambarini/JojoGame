@@ -66,13 +66,18 @@ end
 type MoveSettings = {
 	IgnoreStun : boolean?,
 	RequiresStand : boolean?,
+	IgnoreAttacking : boolean?
 }
 
 function Combat.CanUseMove(Target : CoreUtils.HumanoidR15, Params : MoveSettings?) : (boolean, string?)
 	local Attributes = Target:GetAttributes()
-	local Settings = Params or {RequiresStand = true} :: MoveSettings
+	local Settings = Params or {RequiresStand = true, IgnoreStun = false, IgnoreAttacking = false} :: MoveSettings
 	
 	local Humanoid = Target.Humanoid
+	
+	if Attributes.InBeatdown then
+		return false, "In Beatdown"
+	end
 	
 	if Humanoid.Health <= 0 then
 		return false, "Dead"
@@ -84,7 +89,7 @@ function Combat.CanUseMove(Target : CoreUtils.HumanoidR15, Params : MoveSettings
 		end
 	end
 	
-	if Attributes.UsingMove then
+	if Attributes.UsingMove and not Settings.IgnoreAttacking then
 		return false, "Using move"
 	end
 	

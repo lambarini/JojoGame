@@ -34,6 +34,7 @@ export type PlayerObject = typeof(setmetatable({} :: {
 	Profile : Profile,
 	Replica : ReplicaServer.Replica<typeof(DataTemplate)>,
 	SessionData : SessionData,
+	MousePos : Vector3,
 	_trove : TroveModule.Trove
 }, PlayerObject))
 
@@ -45,6 +46,7 @@ function PlayerObject.new(Player : Player, Profile : Profile) : PlayerObject
 	self.SessionData = {
 		Cooldowns = {},
 	}
+	self.MousePos = Vector3.zero
 	self._trove = TroveModule.new()
 	self.Replica = self._trove:Add(ReplicaServer.New({
 		Token = DataToken,
@@ -154,6 +156,10 @@ function PlayerObject.IsOnCooldown(self : PlayerObject, Name : string) : boolean
 	end
 
 	return os.clock() < Expiry
+end
+
+function PlayerObject.SetAimTracking(self : PlayerObject, Enabled : boolean) : ()
+	self.Player:SetAttribute("AimTracking", Enabled)
 end
 
 function PlayerObject.GetCooldown(self : PlayerObject, Name : string) : number

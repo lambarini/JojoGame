@@ -72,9 +72,10 @@ return {
 			RunService:UnbindFromRenderStep("BeatdownCutscene")
 			Camera.CameraType = Enum.CameraType.Custom
 			Camera.FieldOfView = 70
+			HumanoidRootPart.Anchored = false
 		end)
 
-		Track:Play()
+		Track:Play(0)
 
 		Track.Stopped:Once(function()
 			if ActiveTrove ~= Trove then

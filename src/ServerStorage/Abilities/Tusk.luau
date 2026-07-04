@@ -128,11 +128,14 @@ function Ability:NailShot()
 			end
 
 			local Data = StandData.Tusk.NailShot
-			
+
 			Common:SetAttributes(self.AbilityManager.Character, {
 				UsingMove = true,
 			})
 			self.AbilityManager.PlayerObject:SetCooldown("NailShot", Data.Cooldown)
+
+			self.AbilityManager.PlayerObject.MousePos = Info.MousePos
+			self.AbilityManager.PlayerObject:SetAimTracking(true)
 			
 			Common.PlayAnimation(
 				self.Stand.AnimationController.Animator, 
@@ -145,11 +148,20 @@ function Ability:NailShot()
 			self:SetStandPosition("Attacking")
 			
 			task.delay(36 / 60, function()
+				self.AbilityManager.PlayerObject:SetAimTracking(false)
+
+				local Origin = self.Stand.RightHand.Position
+				local Direction = self.AbilityManager.PlayerObject.MousePos - Origin
+
+				if Direction.Magnitude == 0 then
+					Direction = self.AbilityManager.Character.HumanoidRootPart.CFrame.LookVector
+				end
+
 				Packets.VFXEvent:Fire("NailShotEffect", {self.AbilityManager.Character})
 
 				ProjectileModule.new({
-					Origin = self.Stand.RightHand.Position,
-					Direction = (Info.MousePos - self.Stand.RightHand.Position).Unit,
+					Origin = Origin,
+					Direction = Direction.Unit,
 					Speed = Data.Speed,
 					Range = Data.Range,
 					Character = self.AbilityManager.Character,
@@ -369,6 +381,16 @@ end
 
 function Ability:Barrage()
 	self.BarrageCancelEvent = self.AbilityManager._trove:Add(SignalModule.new())
+	
+	self.AbilityManager.Character.AttributeChanged:Connect(function()
+		if not Combat.CanUseMove(self.AbilityManager.Character, {
+			IgnoreStun = true,
+			RequiresStand = true,
+			IgnoreAttacking = true,
+			}) then
+			self.BarrageCancelEvent:Fire()
+		end
+	end)
 
 	return {
 		[true] = function()
@@ -417,10 +439,14 @@ function Ability:Barrage()
 					})
 				end,
 			})
-
-			--local BarrageAnim : AnimationTrack = plrInfo.StandAnimator:LoadAnimation(SAnims.Barrage)
-			--BarrageAnim.Priority = Enum.AnimationPriority.Action
-			--BarrageAnim:Play()
+			
+			local BarrageAnim = Common.PlayAnimation(
+				self.Stand.AnimationController.Animator,
+				Animations.Barrage,
+				"Barrage",
+				nil,
+				Enum.AnimationPriority.Action
+			)
 
 			local function Cancel()
 				BarrageTrove:Destroy()
@@ -439,7 +465,10 @@ function Ability:Barrage()
 					
 					Packets.VFXEvent:Fire("BarrageEffect", {self.AbilityManager.Character, false})
 
-					--BarrageAnim:Stop()
+					if BarrageAnim then
+						BarrageAnim:Stop()
+					end
+					
 					return
 				end
 			end
@@ -554,6 +583,9 @@ function Ability:RunBeatdown(Enemy : CoreUtils.HumanoidR15, Data : typeof(StandD
 	local Humanoid = Character.Humanoid
 	local EnemyRootPart = Enemy.HumanoidRootPart
 	local EnemyHumanoid = Enemy.Humanoid
+	
+	EnemyHumanoid.AutoRotate = false
+	Humanoid.AutoRotate = false
 
 	self.AbilityManager.PlayerObject:SetCooldown("Beatdown", Data.Cooldown)
 
@@ -571,50 +603,9 @@ function Ability:RunBeatdown(Enemy : CoreUtils.HumanoidR15, Data : typeof(StandD
 	})
 
 	self:SetStandPosition("Center")
-
+	
+	local StartCFrame = HumanoidRootPart.CFrame
 	EnemyRootPart.CFrame = HumanoidRootPart.CFrame
-
-	local AnchorPart = Trove:Add(Instance.new("Part"))
-	AnchorPart.Name = "BeatdownAnchor"
-	AnchorPart.Anchored = true
-	AnchorPart.CanCollide = false
-	AnchorPart.CanQuery = false
-	AnchorPart.CanTouch = false
-	AnchorPart.Transparency = 1
-	AnchorPart.Size = Vector3.one
-	AnchorPart.CFrame = HumanoidRootPart.CFrame
-	AnchorPart.Parent = workspace.Debris
-
-	local AnchorAttachment = Instance.new("Attachment")
-	AnchorAttachment.Parent = AnchorPart
-
-	local function Pin(RootPart : BasePart)
-		local PinAttachment = Trove:Add(Instance.new("Attachment"))
-		PinAttachment.Name = "BeatdownPin"
-		PinAttachment.Parent = RootPart
-
-		local AlignPosition = Trove:Add(Instance.new("AlignPosition"))
-		AlignPosition.Attachment0 = PinAttachment
-		AlignPosition.Attachment1 = AnchorAttachment
-		AlignPosition.RigidityEnabled = true
-		AlignPosition.MaxForce = math.huge
-		AlignPosition.MaxVelocity = math.huge
-		AlignPosition.MaxAxesForce = Vector3.one * math.huge
-		AlignPosition.Responsiveness = 100
-		AlignPosition.Parent = RootPart
-
-		local AlignOrientation = Trove:Add(Instance.new("AlignOrientation"))
-		AlignOrientation.Attachment0 = PinAttachment
-		AlignOrientation.Attachment1 = AnchorAttachment
-		AlignOrientation.RigidityEnabled = true
-		AlignOrientation.MaxTorque = math.huge
-		AlignOrientation.Responsiveness = 100
-		AlignOrientation.MaxAngularVelocity = math.huge
-		AlignOrientation.Parent = RootPart
-	end
-
-	Pin(HumanoidRootPart)
-	Pin(EnemyRootPart)
 
 	local UserTrack = Common.PlayAnimation(
 		Humanoid:FindFirstChildOfClass("Animator"),
@@ -643,10 +634,17 @@ function Ability:RunBeatdown(Enemy : CoreUtils.HumanoidR15, Data : typeof(StandD
 	local EnemyPlayer = PlayersService:GetPlayerFromCharacter(Enemy)
 
 	if EnemyPlayer then
-		Packets.VFXEvent:FireClient(EnemyPlayer, "BeatdownCutscene", {Character, "TuskBeatdown", true})
+		Packets.VFXEvent:FireClient(EnemyPlayer, "BeatdownCutscene", {Character, "TuskBeatdown", true, StartCFrame})
 	end
 
-	Packets.VFXEvent:FireClient(self.AbilityManager.Player, "BeatdownCutscene", {Character, "TuskBeatdown", true})
+	Packets.VFXEvent:FireClient(self.AbilityManager.Player, "BeatdownCutscene", {Character, "TuskBeatdown", true, StartCFrame})
+
+	Trove:Add(task.spawn(function()
+		while task.wait() do
+			EnemyRootPart.CFrame = StartCFrame
+			HumanoidRootPart.CFrame = StartCFrame
+		end
+	end))
 
 	Trove:Add(function()
 		Active = false
@@ -683,6 +681,9 @@ function Ability:RunBeatdown(Enemy : CoreUtils.HumanoidR15, Data : typeof(StandD
 		end
 
 		self:SetStandPosition("Idle", 0.15)
+		
+		Humanoid.AutoRotate = true
+		EnemyHumanoid.AutoRotate = true
 	end)
 
 	Trove:Connect(EnemyHumanoid.Died, function()

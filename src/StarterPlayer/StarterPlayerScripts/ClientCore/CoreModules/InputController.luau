@@ -6,6 +6,7 @@ local InputController = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PlayersService = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 -- // MODULES \\ --
 local Packets = require(ReplicatedStorage.Packets)
@@ -15,6 +16,9 @@ local Player = PlayersService.LocalPlayer
 local Character = Player.Character or Player.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid") :: Humanoid
 local Mouse = Player:GetMouse()
+
+local AimSendInterval = 1 / 20
+local LastAimSent = 0
 
 local Whitelist = {
 	MouseButton1 = true,
@@ -82,6 +86,23 @@ function InputController.init()
 	end
 	
 	Player.CharacterAdded:Connect(CharacterAdded)
+
+	RunService.Heartbeat:Connect(function()
+		if Humanoid.Health <= 0 then
+			return
+		end
+
+		if not Player:GetAttribute("AimTracking") then
+			return
+		end
+
+		if os.clock() - LastAimSent < AimSendInterval then
+			return
+		end
+
+		LastAimSent = os.clock()
+		Packets.AimEvent:Fire(Mouse.Hit.Position)
+	end)
 end
 
 return InputController

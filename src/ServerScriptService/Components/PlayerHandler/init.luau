@@ -15,7 +15,7 @@ local Commands = TextChatService.Commands
 local Modules = ServerStorage.Modules
 
 -- // MODULES \\ --
-local Packets = ReplicatedStorage.Packets
+local Packets = require(ReplicatedStorage.Packets)
 local DataHandler = require(Modules.DataHandler)
 local StatsHandler = require(Modules.StatsHandler)
 local StandHandler = require(Modules.StandHandler)
@@ -53,6 +53,24 @@ function PlayerHandler.init()
 	
 	PlayersService.PlayerAdded:Connect(PlayerAdded)
 	PlayersService.PlayerRemoving:Connect(PlayerRemoving)
+
+	Packets.AimEvent.OnServerEvent:Connect(function(Player : Player, Position : Vector3)
+		if not Player:GetAttribute("AimTracking") then
+			return
+		end
+
+		if Position ~= Position then
+			return
+		end
+
+		local PlayerObject = DataHandler:GetPlayerObject(Player)
+
+		if not PlayerObject then
+			return
+		end
+
+		PlayerObject.MousePos = Position
+	end)
 	
 	Commands.SetGlobal.Triggered:Connect(function(TextSource, Text)
 		local Player = PlayersService:GetPlayerByUserId(TextSource.UserId)
