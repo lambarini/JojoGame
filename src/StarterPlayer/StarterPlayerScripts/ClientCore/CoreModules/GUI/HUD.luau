@@ -3,6 +3,7 @@
 -- // SERVICES \\ --
 local TweenService = game:GetService("TweenService")
 local PlayersService = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- // FOLDERS \\ --
@@ -14,6 +15,7 @@ local Modules = Shared.Modules
 local TroveModule = require(Modules.Trove)
 local Common = require(Modules.Common)
 local DataTemplate = require(Data.DataTemplate)
+local Packets = require(ReplicatedStorage.Packets)
 local ReplicaClient = require(ReplicatedStorage.ReplicaClient)
 
 -- // VARIABLES \\ --
@@ -25,15 +27,23 @@ local GuiName = script.Name
 local Player = PlayersService.LocalPlayer
 local PlayerGui = Player.PlayerGui
 local MainGui = PlayerGui:WaitForChild("HUD")
+local MainFrame = MainGui.Main
 
-local HotColor = Color3.fromRGB(255, 43, 0)
-local NeutralColor = Color3.fromRGB(158, 158, 158)
-local ColdColor = Color3.fromRGB(0, 200, 255)
+local Mouse = Player:GetMouse()
 
 local PlayerReplica : ReplicaClient.Replica<typeof(DataTemplate)> = nil
-local StatsReplica : ReplicaClient.Replica<{Stats : {[string] : {Min : number, Max : number}}, Values : {[string] : number}}> = nil
 
 -- // FUNCTIONS \\ --
+
+local function SetupButton(Button : GuiButton, Keycode : EnumItem)
+	Button.TouchLongPress:Connect(function()
+		Packets.MoveEvent:Fire(Keycode.Name, false, Mouse.Hit.Position)
+	end)
+
+	Button.TouchTap:Connect(function()
+		Packets.MoveEvent:Fire(Keycode.Name, true, Mouse.Hit.Position)
+	end)
+end
 
 function UnRender()
 	Trove:Destroy()
@@ -55,63 +65,22 @@ function UpdateUI()
 	end
 end
 
-function UpdateTemperature()
-	local Color : Color3 = nil
-	local Temperature = StatsReplica.Data.Values.Temperature
-	
-	if not Temperature then
-		return
-	end
-	
-	if Temperature <= 50 then
-		Color = ColdColor:Lerp(NeutralColor, Temperature / 50)
-	else
-		Color = NeutralColor:Lerp(HotColor, (Temperature - 50) / 50)
-	end
-	
-	MainGui.Temperature.BackgroundColor3 = Color
-end
-
-function UpdateStats()
-	UpdateTemperature()
-	
-	for Stat, Value in StatsReplica.Data.Values do
-		if not StatsReplica.Data.Stats[Stat] then
-			continue
-		end
-		
-		local StatFrame = MainGui.Stats:FindFirstChild(Stat)
-		
-		if not StatFrame then
-			continue
-		end
-		
-		local Progress = Value / StatsReplica.Data.Stats[Stat].Max
-		StatFrame.UIGradient.Offset = Vector2.new(Progress - 0.5, 0)
-	end
-end
-
 function Init()
 	task.spawn(UpdateUI)
 	States:GetAttributeChangedSignal("ActiveComponent"):Connect(UpdateUI)
 	
-	UpdateStats()
-	StatsReplica:OnChange(UpdateStats)
+	MainFrame.Hotbar.Visible = UserInputService.TouchEnabled
+	
+	SetupButton(MainFrame.Hotbar.One, Enum.UserInputType.MouseButton1)
+	SetupButton(MainFrame.Hotbar.Two, Enum.KeyCode.Q)
+	SetupButton(MainFrame.Hotbar.Three, Enum.KeyCode.E)
 end
 
 -- // MAIN \\ --
 ReplicaClient.OnNew("PlayerData", function(PlayerData)
 	PlayerReplica = PlayerData
 	
-	if PlayerReplica and StatsReplica then
-		Init()
-	end
-end)
-
-ReplicaClient.OnNew("StatsToken", function(PlayerStats)
-	StatsReplica = PlayerStats
-
-	if PlayerReplica and StatsReplica then
+	if PlayerReplica then
 		Init()
 	end
 end)
